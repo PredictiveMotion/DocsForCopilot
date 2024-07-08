@@ -1,10 +1,22 @@
-import os
 import sys
 from pdfminer.high_level import extract_text
 from markdownify import markdownify as md
 
 
 def pdf_to_markdown(pdf_path, markdown_path):
+    """
+    Convert a PDF file to Markdown format.
+
+    Args:
+        pdf_path (str): The path to the PDF file.
+        markdown_path (str): The path to save the Markdown file.
+
+    Raises:
+        Exception: If an error occurs during the conversion process.
+
+    Returns:
+        None
+    """
     try:
         # Extract text from the PDF
         text = extract_text(pdf_path)
