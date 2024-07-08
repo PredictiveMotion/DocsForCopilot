@@ -1,0 +1,2 @@
+https://learn.microsoft.com/en-us/dotnet/api/uiautomationclientsideproviders?view=netframework-4.5.2
+https://learn.microsoft.com/en-us/dotnet/api/xamlgeneratednamespace?view=netframework-4.5.2
