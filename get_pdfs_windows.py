@@ -1,7 +1,6 @@
 import os
 import time
 import logging
-import platform
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -23,25 +22,17 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
-# Initialize a queue for WebDriver instances
-driver_queue = Queue()
+# Replace with your ChromeDriver path
+chrome_driver_path = "c:/development/samples/pdfToMarkdown/chromedriver.exe"
 
 # Adjustable constant for the number of Chrome processes
 NUM_PROCESSES = 5
 
-def get_os_specific_paths():
-    if platform.system() == "Linux":
-        chrome_driver_path = "./chrome_linux/chromedriver"  # Adjust this path
-        binary_location = os.path.abspath("chrome_linux/chrome-linux64/chrome")  # Adjust if necessary
-    elif platform.system() == "Windows":
-        chrome_driver_path = "c:/development/samples/pdfToMarkdown/chromedriver.exe"  # Adjust this path
-        binary_location = None  # Not needed for Windows in this setup
-    else:
-        raise NotImplementedError("This script only supports Linux and Windows")
-    return chrome_driver_path, binary_location
+# Initialize a queue for WebDriver instances
+driver_queue = Queue()
+
 
 def initialize_driver():
-    chrome_driver_path, binary_location = get_os_specific_paths()
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
@@ -51,9 +42,7 @@ def initialize_driver():
     options.add_argument("--disable-web-security")
     options.add_argument("--allow-running-insecure-content")
 
-    if binary_location:
-        options.binary_location = binary_location
-
+    # Set up download preferences
     prefs = {
         "download.default_directory": os.path.abspath("downloaded_pdfs"),
         "download.prompt_for_download": False,

@@ -1902,3 +1902,31 @@ Stacktrace:
 2024-07-08 20:38:23,009 - INFO - Renamed dotnet-api-_splitted-system.web.modelbinding-netframework-4.5.2.pdf to dotnet-api-system.web.modelbinding-netframework-4.5.2.pdf
 2024-07-08 20:38:23,009 - INFO - Renamed dotnet-api-_splitted-system.runtime.versioning-netframework-4.5.2.pdf to dotnet-api-system.runtime.versioning-netframework-4.5.2.pdf
 2024-07-08 20:38:23,009 - INFO - Renamed dotnet-api-_splitted-microsoft.visualbasic.fileio-netframework-4.5.2.pdf to dotnet-api-microsoft.visualbasic.fileio-netframework-4.5.2.pdf
+2024-07-08 23:51:10,609 - ERROR - Failed to initialize WebDriver: Message: Unable to obtain driver for chrome; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/driver_location
+
+2024-07-08 23:51:10,609 - ERROR - Failed to initialize WebDriver: Message: Unable to obtain driver for chrome; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/driver_location
+
+2024-07-08 23:51:10,610 - ERROR - Failed to initialize WebDriver: Message: Unable to obtain driver for chrome; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/driver_location
+
+2024-07-08 23:51:10,610 - ERROR - Failed to initialize WebDriver: Message: Unable to obtain driver for chrome; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/driver_location
+
+2024-07-08 23:51:10,610 - ERROR - Failed to initialize WebDriver: Message: Unable to obtain driver for chrome; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/driver_location
+
+2024-07-08 23:51:47,049 - INFO - WebDriver initialized successfully
+2024-07-08 23:51:47,215 - INFO - WebDriver initialized successfully
+2024-07-08 23:51:47,387 - INFO - WebDriver initialized successfully
+2024-07-08 23:51:47,617 - INFO - WebDriver initialized successfully
+2024-07-08 23:51:47,816 - INFO - WebDriver initialized successfully
+2024-07-08 23:51:47,818 - INFO - Processing link 1: https://learn.microsoft.com/en-us/dotnet/api/system.xml.xsl.runtime?view=netframework-4.5.2
+2024-07-08 23:51:47,826 - INFO - Processing link 2: https://learn.microsoft.com/en-us/dotnet/api/uiautomationclientsideproviders?view=netframework-4.5.2
+2024-07-08 23:51:47,828 - INFO - Processing link 3: https://learn.microsoft.com/en-us/dotnet/api/xamlgeneratednamespace?view=netframework-4.5.2
+2024-07-08 23:51:53,951 - INFO - PDF button found and clicked for link 1 using selector: //button[@data-bi-name='download-pdf']
+2024-07-08 23:51:54,598 - INFO - PDF button found and clicked for link 3 using selector: //button[@data-bi-name='download-pdf']
+2024-07-08 23:51:54,637 - INFO - PDF button found and clicked for link 2 using selector: //button[@data-bi-name='download-pdf']
+2024-07-08 23:52:03,962 - INFO - Downloaded PDF for link 1
+2024-07-08 23:52:04,609 - INFO - Downloaded PDF for link 3
+2024-07-08 23:52:04,650 - INFO - Downloaded PDF for link 2
+2024-07-08 23:52:04,650 - INFO - Download process completed.
+2024-07-08 23:52:04,651 - INFO - Renamed dotnet-api-_splitted-xamlgeneratednamespace-netframework-4.5.2.pdf to dotnet-api-xamlgeneratednamespace-netframework-4.5.2.pdf
+2024-07-08 23:52:04,651 - INFO - Renamed dotnet-api-_splitted-uiautomationclientsideproviders-netframework-4.5.2.pdf to dotnet-api-uiautomationclientsideproviders-netframework-4.5.2.pdf
+2024-07-08 23:52:04,652 - INFO - Renamed dotnet-api-_splitted-system.xml.xsl.runtime-netframework-4.5.2.pdf to dotnet-api-system.xml.xsl.runtime-netframework-4.5.2.pdf
