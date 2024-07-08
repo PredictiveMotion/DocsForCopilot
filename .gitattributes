@@ -3,3 +3,5 @@
 .md filter=lfs diff=lfs merge=lfs -text
 chrome[[:space:]]driver[[:space:]]archives/*.zip filter=lfs diff=lfs merge=lfs -text
 chrome[[:space:]]driver[[:space:]]archives/chrome-win64.zip filter=lfs diff=lfs merge=lfs -text
+*.zip filter=lfs diff=lfs merge=lfs -text
+*.exe filter=lfs diff=lfs merge=lfs -text
