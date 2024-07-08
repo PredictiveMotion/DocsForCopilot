@@ -45,7 +45,8 @@ def initialize_driver():
 
 
     # Specify the path to the Chrome binary
-    options.binary_location = os.path.abspath("chrome driver archives/chrome-linux64/chrome")  # Adjust if necessary
+#    options.binary_location = os.path.abspath("../chromeDriverArchives/chrome-linux64/chrome")  # Adjust if necessary
+    options.binary_location = os.path.abspath("chrome_linux/chrome-linux64/chrome")  # Adjust if necessary
 
     # Set up download preferences
     prefs = {
