@@ -29,16 +29,22 @@ driver_queue = Queue()
 # Adjustable constant for the number of Chrome processes
 NUM_PROCESSES = 5
 
+
 def get_os_specific_paths():
     if platform.system() == "Linux":
         chrome_driver_path = "./chrome_linux/chromedriver"  # Adjust this path
-        binary_location = os.path.abspath("chrome_linux/chrome-linux64/chrome")  # Adjust if necessary
+        binary_location = os.path.abspath(
+            "chrome_linux/chrome-linux64/chrome"
+        )  # Adjust if necessary
     elif platform.system() == "Windows":
-        chrome_driver_path = "c:/development/samples/pdfToMarkdown/chromedriver.exe"  # Adjust this path
+        chrome_driver_path = (
+            "c:/development/samples/pdfToMarkdown/chromedriver.exe"  # Adjust this path
+        )
         binary_location = None  # Not needed for Windows in this setup
     else:
         raise NotImplementedError("This script only supports Linux and Windows")
     return chrome_driver_path, binary_location
+
 
 def initialize_driver():
     chrome_driver_path, binary_location = get_os_specific_paths()
