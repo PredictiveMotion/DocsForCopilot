@@ -23,7 +23,7 @@ logging.basicConfig(
 )
 
 # Replace with your ChromeDriver path
-#chrome_driver_path = "c:/development/samples/pdfToMarkdown/chromedriver.exe"
+# chrome_driver_path = "c:/development/samples/pdfToMarkdown/chromedriver.exe"
 chrome_driver_path = "./chrome_linux/chromedriver"
 
 # Adjustable constant for the number of Chrome processes
@@ -43,10 +43,11 @@ def initialize_driver():
     options.add_argument("--disable-web-security")
     options.add_argument("--allow-running-insecure-content")
 
-
     # Specify the path to the Chrome binary
-#    options.binary_location = os.path.abspath("../chromeDriverArchives/chrome-linux64/chrome")  # Adjust if necessary
-    options.binary_location = os.path.abspath("chrome_linux/chrome-linux64/chrome")  # Adjust if necessary
+    #    options.binary_location = os.path.abspath("../chromeDriverArchives/chrome-linux64/chrome")  # Adjust if necessary
+    options.binary_location = os.path.abspath(
+        "chrome_linux/chrome-linux64/chrome"
+    )  # Adjust if necessary
 
     # Set up download preferences
     prefs = {
