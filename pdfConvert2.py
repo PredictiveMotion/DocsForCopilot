@@ -1,31 +1,34 @@
 import os
 import sys
 from pdfminer.high_level import extract_text
-from markdownify import markdownify as md
 
-
-import os
+def simple_text_to_markdown(text):
+    """
+    Convert plain text to a simple Markdown format.
+    """
+    lines = text.split('\n')
+    markdown_lines = []
+    for line in lines:
+        line = line.strip()
+        if line:
+            if line.isupper():
+                markdown_lines.append(f"# {line}\n")
+            else:
+                markdown_lines.append(f"{line}\n")
+        else:
+            markdown_lines.append("\n")
+    return "".join(markdown_lines)
 
 def pdf_to_markdown(input_pdf_path, output_markdown_path):
     """
     Convert a PDF file to Markdown format.
-
-    Args:
-        input_pdf_path (str): The path to the PDF file.
-        output_markdown_path (str): The path to save the Markdown file.
-
-    Raises:
-        Exception: If an error occurs during the conversion process.
-
-    Returns:
-        None
     """
     try:
         # Extract text from the PDF
         text = extract_text(input_pdf_path)
 
         # Convert the extracted text to Markdown
-        markdown = md(text)
+        markdown = simple_text_to_markdown(text)
 
         # Save the Markdown to a file
         with open(output_markdown_path, "w", encoding="utf-8") as f:
@@ -44,7 +47,6 @@ def pdf_to_markdown(input_pdf_path, output_markdown_path):
         if os.path.exists(output_markdown_path):
             os.remove(output_markdown_path)
             print(f"Deleted offending Markdown file: {output_markdown_path}")
-
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
