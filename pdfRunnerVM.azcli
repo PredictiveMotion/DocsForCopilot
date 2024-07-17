@@ -1,0 +1,24 @@
+# export USERNAME=yourUsername
+# export RESOURCE_GROUP=yourResourceGroupName
+# export VM_NAME=yourVMName
+
+# Log in to Azure
+az login
+
+# Create a resource group in the East US location
+az group create --name ${RESOURCE_GROUP} --location eastus
+
+# Create a VM named  VmName in the specified resource group with a specific image and size
+az vm create --resource-group ${RESOURCE_GROUP} --name ${VM_NAME} --image Win2022Datacenter --admin-username ${USERNAME} --generate-ssh-keys --size Standard_D2s_v3
+
+# List available VM sizes in the East US location
+az vm list-sizes --location eastus --output table
+
+# Delete the VM without confirmation
+az vm delete --name ${VM_NAME} --resource-group ${RESOURCE_GROUP} --yes
+
+# List all resource groups
+az group list --output table
+
+# List all VMs in the specified resource group
+az vm list --resource-group ${RESOURCE_GROUP} --output table
