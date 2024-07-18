@@ -19,8 +19,6 @@ import configparser
 import argparse
 
 
-
-
 def format_text_as_markdown(text):
     """
     Format raw text into a basic Markdown structure.
@@ -129,32 +127,38 @@ def pdf_to_markdown(input_pdf_path, output_markdown_path, converter="pdfminer"):
             print(f"Deleted offending Markdown file: {output_markdown_path}")
 
 
-
-def read_config(config_file='config.ini'):
+def read_config(config_file="config.ini"):
     config = configparser.ConfigParser()
     config.read(config_file)
     return config
 
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", help="Path to the configuration file.")
-    parser.add_argument("pdf_dir", nargs='?', help="Path to the PDF directory.")
-    parser.add_argument("md_dir", nargs='?', help="Path to the Markdown directory.")
-    parser.add_argument("converter", nargs='?', default="pdfminer", 
-                        help="The converter to use: 'pdfminer' or 'markdownify'. Defaults to 'pdfminer'.")
+    parser.add_argument("pdf_dir", nargs="?", help="Path to the PDF directory.")
+    parser.add_argument("md_dir", nargs="?", help="Path to the Markdown directory.")
+    parser.add_argument(
+        "converter",
+        nargs="?",
+        default="pdfminer",
+        help="The converter to use: 'pdfminer' or 'markdownify'. Defaults to 'pdfminer'.",
+    )
 
     args = parser.parse_args()
 
     if args.config:
         config = read_config(args.config)
-        pdf_directory = config['PDFSettings']['input_folder']
-        markdown_directory = config['PDFSettings']['output_folder']
-        converter_to_use = config['PDFSettings']['converter']
+        pdf_directory = config["PDFSettings"]["input_folder"]
+        markdown_directory = config["PDFSettings"]["output_folder"]
+        converter_to_use = config["PDFSettings"]["converter"]
     else:
         if not args.pdf_dir or not args.md_dir:
-            print("Usage: python pdf_to_markdown.py <pdf_dir> <md_dir> [converter] OR --config <config.ini>")
+            print(
+                "Usage: python pdf_to_markdown.py <pdf_dir> <md_dir> [converter] OR --config <config.ini>"
+            )
             sys.exit(1)
-        
+
         pdf_directory = args.pdf_dir
         markdown_directory = args.md_dir
         converter_to_use = args.converter
@@ -168,6 +172,7 @@ def main():
             markdown_filename = os.path.splitext(filename)[0] + ".md"
             markdown_path = os.path.join(markdown_directory, markdown_filename)
             pdf_to_markdown(pdf_path, markdown_path, converter_to_use)
+
 
 if __name__ == "__main__":
     main()
