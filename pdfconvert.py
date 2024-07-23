@@ -172,8 +172,6 @@ def parse_arguments_and_configure_paths():
 
 
 
-def create_directory(directory):
-    os.makedirs(directory, exist_ok=True)
 
 
 
@@ -194,7 +192,7 @@ def main():
         None
     """
     pdf_directory, markdown_directory, converter_to_use = parse_arguments_and_configure_paths()
-    create_directory(markdown_directory)
+    os.makedirs(markdown_directory, exist_ok=True)
 
     for filename in os.listdir(pdf_directory):
         if filename.endswith(".pdf"):
