@@ -4,8 +4,7 @@ import sys
 import argparse
 from converters.pdf_to_markdown_pdfminer import pdf_to_markdown_pdfminer
 from converters.pdf_to_markdown_markdownify import pdf_to_markdown_markdownify
-from utils.configure_paths import configure_paths_and_converter, parse_arguments_and_configure_paths
-from utils.argument_parser import parse_arguments
+from utils.configure_paths import parse_arguments_and_configure_paths
 from markdown_formatting import format_text_as_markdown
 
 
