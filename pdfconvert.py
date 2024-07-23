@@ -2,32 +2,11 @@
 import os
 import sys
 import argparse
-import pdfplumber
-from pdfminer.high_level import extract_text
-from markdownify import markdownify as md
-from config_management import read_config
+from converters.pdf_to_markdown_pdfminer import pdf_to_markdown_pdfminer
+from converters.pdf_to_markdown_markdownify import pdf_to_markdown_markdownify
+from utils.configure_paths import configure_paths_and_converter, parse_arguments_and_configure_paths
 from markdown_formatting import format_text_as_markdown
 
-
-
-def pdf_to_markdown_pdfminer(input_pdf_path):
-    markdown_text = ""
-    with pdfplumber.open(input_pdf_path) as pdf:
-        for page in pdf.pages:
-            text = page.extract_text()
-            if text:
-                markdown_text += format_text_as_markdown(text) + "\n\n"
-    return markdown_text
-
-
-
-def pdf_to_markdown_markdownify(input_pdf_path):
-    # Extract text from the PDF
-    text = extract_text(input_pdf_path)
-
-    # Convert the extracted text to Markdown
-    markdown_text = md(text)
-    return markdown_text
 
 
 
@@ -79,30 +58,6 @@ def parse_arguments():
 
 
 
-def configure_paths_and_converter(args):
-    if args.config:
-        config = read_config(args.config)
-        pdf_directory = config["PDFSettings"]["input_folder"]
-        markdown_directory = config["PDFSettings"]["output_folder"]
-        converter_to_use = config["PDFSettings"]["converter"]
-    else:
-        if not args.pdf_dir or not args.md_dir:
-            print(
-                "Usage: python pdf_to_markdown.py <pdf_dir> <md_dir> [converter] OR --config <config.ini>"
-            )
-            sys.exit(1)
-
-        pdf_directory = args.pdf_dir
-        markdown_directory = args.md_dir
-        converter_to_use = args.converter
-    return pdf_directory, markdown_directory, converter_to_use
-
-
-
-def parse_arguments_and_configure_paths():
-    args = parse_arguments()
-    pdf_directory, markdown_directory, converter_to_use = configure_paths_and_converter(args)
-    return pdf_directory, markdown_directory, converter_to_use
 
 
 
