@@ -4,8 +4,6 @@ import pdfplumber
 from markdownify import markdownify as md
 
 
-
-
 def pdf_to_markdown_pdfminer(input_pdf_path):
     markdown_text = ""
     with pdfplumber.open(input_pdf_path) as pdf:
@@ -16,9 +14,7 @@ def pdf_to_markdown_pdfminer(input_pdf_path):
     return markdown_text
 
 
-
-
 def pdf_to_markdown_markdownify(input_pdf_path):
-	text = extract_text(input_pdf_path)
-	markdown_text = md(text)
-	return markdown_text
+    text = extract_text(input_pdf_path)
+    markdown_text = md(text)
+    return markdown_text
