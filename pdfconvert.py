@@ -21,8 +21,6 @@ def pdf_to_markdown(input_pdf_path, output_markdown_path, converter="pdfminer"):
         else:
             print(f"Invalid converter: {converter}")
             sys.exit(1)
-
-        # Save the Markdown to a file
         with open(output_markdown_path, "w", encoding="utf-8") as f:
             f.write(markdown_text)
 
@@ -30,11 +28,9 @@ def pdf_to_markdown(input_pdf_path, output_markdown_path, converter="pdfminer"):
 
     except IOError as e:
         print(f"An error occurred: {e}")
-        # Save the offending pdf's filename to a file
         with open("bad_pdfs.txt", "a", encoding="utf-8") as f:
             bad_pdf = os.path.basename(input_pdf_path)
             f.write(f"{bad_pdf}\n")
-        # Delete the offending Markdown file if it exists
         if os.path.exists(output_markdown_path):
             os.remove(output_markdown_path)
             print(f"Deleted offending Markdown file: {output_markdown_path}")
