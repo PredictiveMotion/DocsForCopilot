@@ -7,6 +7,7 @@ from utils.configure_paths import parse_arguments_and_configure_paths
 
 
 
+
 def pdf_to_markdown(input_pdf_path, output_markdown_path, converter="pdfminer"):
     try:
         if converter == "markdownify":
@@ -33,17 +34,6 @@ def pdf_to_markdown(input_pdf_path, output_markdown_path, converter="pdfminer"):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 def main():
     pdf_directory, markdown_directory, converter_to_use = parse_arguments_and_configure_paths()
     os.makedirs(markdown_directory, exist_ok=True)
@@ -54,8 +44,6 @@ def main():
             markdown_filename = os.path.splitext(filename)[0] + ".md"
             markdown_path = os.path.join(markdown_directory, markdown_filename)
             pdf_to_markdown(pdf_path, markdown_path, converter_to_use)
-
-
 
 
 if __name__ == "__main__":
