@@ -11,7 +11,7 @@ def configure_paths_and_converter(args):
     else:
         if not args.pdf_dir or not args.md_dir:
             print(
-                "Usage: python pdf_to_markdown.py <pdf_dir> <md_dir> [converter] OR --config <config.ini>"
+                "Usage: python pdfconvert.py <pdf_dir> <md_dir> [converter] OR --config <config.ini>"
             )
             sys.exit(1)
 
