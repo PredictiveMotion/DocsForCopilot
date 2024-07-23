@@ -39,7 +39,8 @@ def get_os_specific_paths():
         chrome_driver_path = "./chrome_linux/chromedriver"
         binary_location = os.path.abspath("chrome_linux/chrome-linux64/chrome")
     elif platform.system() == "Windows":
-        chrome_driver_path = "c:/development/samples/pdfToMarkdown/chromedriver.exe"
+        chrome_driver_path = "./chrome/chrome_windows/chromedriver.exe"
+        #chrome_driver_path = "c:/development/samples/pdfToMarkdown/chromedriver.exe"
         binary_location = None
     else:
         raise NotImplementedError("This script only supports Linux and Windows")
