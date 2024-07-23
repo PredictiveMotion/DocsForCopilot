@@ -1,7 +1,7 @@
-from markdown_formatting import format_text_as_markdown
-from pdfminer.high_level import extract_text
 import pdfplumber
 from markdownify import markdownify as md
+from pdfminer.high_level import extract_text
+from markdown_formatting import format_text_as_markdown
 
 
 def pdf_to_markdown_pdfminer(input_pdf_path):
