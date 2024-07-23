@@ -1,5 +1,6 @@
 import sys
 from config_management import read_config
+from pdfconvert import parse_arguments
 
 def configure_paths_and_converter(args):
     if args.config:
