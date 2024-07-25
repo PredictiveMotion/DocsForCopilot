@@ -43,12 +43,12 @@ def save_links(links, output_file):
 
 def main():
     chrome_driver_path = "c:/development/samples/pdfToMarkdown/chromedriver.exe"
-    url = "https://learn.microsoft.com/en-us/dotnet/api/?view=netframework-4.5.2&preserve-view=true"
+    url_to_parse = "https://learn.microsoft.com/en-us/dotnet/api/?view=netframework-4.5.2&preserve-view=true"
     output_file = "framework452_links.txt"
 
     try:
         with setup_driver(chrome_driver_path) as driver:
-            links = get_links(driver, url)
+            links = get_links(driver, url_to_parse)
             save_links(links, output_file)
     except TimeoutException:
         print("Timed out waiting for page to load")
