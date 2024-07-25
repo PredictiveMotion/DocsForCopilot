@@ -48,12 +48,18 @@ def main():
 
     os.makedirs(markdown_directory, exist_ok=True)
 
-    for filename in os.listdir(pdf_directory):
-        if filename.endswith(".pdf"):
-            pdf_path = os.path.join(pdf_directory, filename)
-            markdown_filename = os.path.splitext(filename)[0] + ".md"
-            markdown_path = os.path.join(markdown_directory, markdown_filename)
-            pdf_to_markdown(pdf_path, markdown_path, converter_to_use)
+    pdf_files = [f for f in os.listdir(pdf_directory) if f.endswith(".pdf")]
+    total_files = len(pdf_files)
+
+    for index, filename in enumerate(pdf_files, start=1):
+        pdf_path = os.path.join(pdf_directory, filename)
+        markdown_filename = os.path.splitext(filename)[0] + ".md"
+        markdown_path = os.path.join(markdown_directory, markdown_filename)
+        print(f"Processing file {index} of {total_files}: {filename}")
+        pdf_to_markdown(pdf_path, markdown_path, converter_to_use)
+        print(f"Completed file {index} of {total_files}: {filename}")
+
+    print(f"All {total_files} PDF files have been processed.")
 
 if __name__ == "__main__":
     main()
