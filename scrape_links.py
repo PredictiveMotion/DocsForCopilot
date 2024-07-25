@@ -59,7 +59,7 @@ def select_url(urls):
 
 def main():
     """Main function to set up the driver, scrape links, and save them to a file."""
-    chrome_driver_path = "c:/development/samples/pdfToMarkdown/chromedriver.exe"
+    chrome_driver_path = "chrome/chrome_windows/chromedriver.exe"
     urls_file = "links_to_scrape.txt"
     
     urls = read_urls_from_file(urls_file)
