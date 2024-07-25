@@ -82,20 +82,37 @@ def download_pdf(driver, link, idx, download_dir):
                 )
 
                 # Wait for download to complete
-                time.sleep(10)  # Adjust this time based on typical download duration
+                max_wait_time = 30  # Maximum wait time in seconds
+                start_time = time.time()
+                while time.time() - start_time < max_wait_time:
+                    downloaded_files = os.listdir(download_dir)
+                    pdf_files = [f for f in downloaded_files if f.endswith(".pdf")]
+                    crdownload_files = [f for f in downloaded_files if f.endswith(".crdownload")]
+                    
+                    if pdf_files:
+                        # Check if the PDF is a duplicate
+                        pdf_path = os.path.join(download_dir, pdf_files[0])
+                        if os.path.getsize(pdf_path) > 0:
+                            logging.info(f"Downloaded PDF for link {idx}")
+                            return True
+                        else:
+                            os.remove(pdf_path)  # Remove empty PDF file
+                            logging.warning(f"Empty PDF file removed for link {idx}")
+                    
+                    if not crdownload_files:
+                        break
+                    
+                    time.sleep(1)
 
-                # Check if PDF was downloaded
-                downloaded_files = os.listdir(download_dir)
-                pdf_files = [f for f in downloaded_files if f.endswith(".pdf")]
+                # Clean up any remaining .crdownload files
+                for crdownload_file in [f for f in os.listdir(download_dir) if f.endswith(".crdownload")]:
+                    os.remove(os.path.join(download_dir, crdownload_file))
+                    logging.warning(f"Removed incomplete download file: {crdownload_file}")
 
-                if pdf_files:
-                    logging.info(f"Downloaded PDF for link {idx}")
-                    return True
-                else:
-                    logging.warning(
-                        f"No PDF file found in download directory for link {idx}"
-                    )
+                if not pdf_files:
+                    logging.warning(f"No PDF file found in download directory for link {idx}")
                     return False
+
             except (TimeoutException, NoSuchElementException):
                 continue
 
