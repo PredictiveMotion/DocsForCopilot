@@ -12,6 +12,12 @@ from utils.configure_paths import get_config_settings
 
 
 def parse_arguments():
+    """
+    Parse command-line arguments for the PDF to Markdown converter.
+
+    Returns:
+        argparse.Namespace: Parsed command-line arguments.
+    """
     parser = argparse.ArgumentParser(description="Convert PDF files to Markdown.")
     parser.add_argument("--config", help="Path to the configuration file")
     parser.add_argument("pdf_dir", nargs="?", help="Directory containing PDF files")
@@ -27,6 +33,15 @@ def parse_arguments():
 
 
 def process_arguments(args):
+    """
+    Process parsed arguments and return configuration settings.
+
+    Args:
+        args (argparse.Namespace): Parsed command-line arguments.
+
+    Returns:
+        tuple: PDF directory, Markdown directory, and converter to use.
+    """
     if args.config:
         pdf_directory, markdown_directory, converter_to_use = get_config_settings(
             args.config
