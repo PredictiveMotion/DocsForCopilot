@@ -1,20 +1,30 @@
 import argparse
 import os
 import sys
+
 from utils.configure_paths import get_config_settings
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Convert PDF files to Markdown.")
     parser.add_argument("--config", help="Path to the configuration file")
     parser.add_argument("pdf_dir", nargs="?", help="Directory containing PDF files")
     parser.add_argument("md_dir", nargs="?", help="Directory to save Markdown files")
-    parser.add_argument("converter", nargs="?", choices=["pdfminer", "markdownify"], default="pdfminer",
-                        help="Converter to use (default: pdfminer)")
+    parser.add_argument(
+        "converter",
+        nargs="?",
+        choices=["pdfminer", "markdownify"],
+        default="pdfminer",
+        help="Converter to use (default: pdfminer)",
+    )
     return parser.parse_args()
+
 
 def process_arguments(args):
     if args.config:
-        pdf_directory, markdown_directory, converter_to_use = get_config_settings(args.config)
+        pdf_directory, markdown_directory, converter_to_use = get_config_settings(
+            args.config
+        )
     else:
         pdf_directory = args.pdf_dir
         markdown_directory = args.md_dir
