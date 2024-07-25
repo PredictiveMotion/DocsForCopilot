@@ -66,6 +66,15 @@ def initialize_driver(download_dir):
 
 def download_pdf(driver, link, idx, download_dir):
     try:
+        # Extract the PDF filename from the link
+        pdf_filename = link.split('/')[-1].replace('?view=netframework-4.5.2', '') + '.pdf'
+        pdf_path = os.path.join(download_dir, pdf_filename)
+
+        # Check if the file already exists
+        if os.path.exists(pdf_path):
+            logging.info(f"PDF already exists for link {idx}: {pdf_filename}")
+            return True
+
         for selector in [
             "//button[@data-bi-name='download-pdf']",
             "//a[contains(@href, '.pdf')]",
@@ -82,35 +91,29 @@ def download_pdf(driver, link, idx, download_dir):
                 )
 
                 # Wait for download to complete
-                max_wait_time = 60  # Increased maximum wait time to 60 seconds
+                max_wait_time = 60
                 start_time = time.time()
                 while time.time() - start_time < max_wait_time:
-                    downloaded_files = os.listdir(download_dir)
-                    pdf_files = [f for f in downloaded_files if f.endswith(".pdf")]
-                    crdownload_files = [f for f in downloaded_files if f.endswith(".crdownload")]
-                    
-                    if pdf_files:
-                        # Check if the PDF is a duplicate
-                        pdf_path = os.path.join(download_dir, pdf_files[0])
+                    if os.path.exists(pdf_path):
                         if os.path.getsize(pdf_path) > 0:
-                            logging.info(f"Downloaded PDF for link {idx}: {pdf_files[0]}")
+                            logging.info(f"Downloaded PDF for link {idx}: {pdf_filename}")
                             return True
                         else:
                             os.remove(pdf_path)  # Remove empty PDF file
-                            logging.warning(f"Empty PDF file removed for link {idx}: {pdf_files[0]}")
+                            logging.warning(f"Empty PDF file removed for link {idx}: {pdf_filename}")
                     
-                    if not crdownload_files:
+                    crdownload_path = pdf_path + '.crdownload'
+                    if not os.path.exists(crdownload_path):
                         break
                     
                     time.sleep(1)
 
-                # Clean up any remaining .crdownload files
-                for crdownload_file in [f for f in os.listdir(download_dir) if f.endswith(".crdownload")]:
-                    crdownload_path = os.path.join(download_dir, crdownload_file)
+                # Clean up any remaining .crdownload file
+                if os.path.exists(crdownload_path):
                     os.remove(crdownload_path)
-                    logging.warning(f"Removed incomplete download file for link {idx}: {crdownload_file}")
+                    logging.warning(f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload")
 
-                if not pdf_files:
+                if not os.path.exists(pdf_path):
                     logging.warning(f"No PDF file found in download directory for link {idx}")
                     return False
 
