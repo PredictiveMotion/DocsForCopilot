@@ -1,3 +1,10 @@
+"""
+This module handles argument parsing and processing for the PDF to Markdown converter.
+
+It provides functions to parse command-line arguments and process them,
+including handling configuration files and validating input.
+"""
+
 import argparse
 import os
 import sys
