@@ -7,5 +7,4 @@ def parse_arguments():
     parser.add_argument("md_dir", nargs="?", help="Directory to save Markdown files")
     parser.add_argument("converter", nargs="?", choices=["pdfminer", "markdownify"], default="pdfminer",
                         help="Converter to use (default: pdfminer)")
-    
     return parser.parse_args()

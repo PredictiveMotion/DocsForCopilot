@@ -1,19 +1,10 @@
 import os
 import sys
-import argparse
 
 from converters.pdf_to_markdown_pdfminer import pdf_to_markdown_pdfminer
 from converters.pdf_to_markdown_markdownify import pdf_to_markdown_markdownify
 from utils.configure_paths import get_config_settings
-
-def parse_arguments():
-    parser = argparse.ArgumentParser(description="Convert PDF files to Markdown.")
-    parser.add_argument("--config", help="Path to the configuration file")
-    parser.add_argument("pdf_dir", nargs="?", help="Directory containing PDF files")
-    parser.add_argument("md_dir", nargs="?", help="Directory to save Markdown files")
-    parser.add_argument("converter", nargs="?", choices=["pdfminer", "markdownify"], default="pdfminer",
-                        help="Converter to use (default: pdfminer)")
-    return parser.parse_args()
+from utils.argument_parser import parse_arguments
 
 def pdf_to_markdown(input_pdf_path, output_markdown_path, converter="pdfminer"):
     try:
