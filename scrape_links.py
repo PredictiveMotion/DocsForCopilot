@@ -31,7 +31,6 @@ def get_links(driver, url, view):
         for link in links
         if link.get_attribute("href").startswith("https://learn.microsoft.com/en-us/dotnet/api/")
         and f"view={view}" in link.get_attribute("href")
-        and not link.get_attribute("href").endswith("#")
     ]
 
 def save_links(links, output_file):
