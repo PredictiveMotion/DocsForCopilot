@@ -64,7 +64,7 @@ def initialize_driver():
         return None
 
 
-def download_pdf(driver, link, idx):
+def download_pdf(driver, link, idx, download_dir):
     try:
         for selector in [
             "//button[@data-bi-name='download-pdf']",
@@ -85,7 +85,6 @@ def download_pdf(driver, link, idx):
                 time.sleep(10)  # Adjust this time based on typical download duration
 
                 # Check if PDF was downloaded
-                download_dir = os.path.abspath("downloaded_pdfs")
                 downloaded_files = os.listdir(download_dir)
                 pdf_files = [f for f in downloaded_files if f.endswith(".pdf")]
 
@@ -107,7 +106,7 @@ def download_pdf(driver, link, idx):
         return False
 
 
-def process_link(driver, link, idx):
+def process_link(driver, link, idx, download_dir):
     if not link.strip():
         logging.warning(f"Skipping empty link at index {idx}")
         return False
@@ -117,7 +116,7 @@ def process_link(driver, link, idx):
         driver.get(link)
         time.sleep(5)  # Wait for page to load
 
-        return download_pdf(driver, link, idx)
+        return download_pdf(driver, link, idx, download_dir)
     except WebDriverException as e:
         logging.error(f"WebDriver error processing link {idx}: {str(e)}")
     except Exception as e:
@@ -133,11 +132,11 @@ def create_driver_pool(num_instances):
             driver_queue.put(driver)
 
 
-def process_link_with_own_driver(link_idx_tuple):
+def process_link_with_own_driver(link_idx_tuple, download_dir):
     idx, link = link_idx_tuple
     driver = driver_queue.get()  # Borrow a WebDriver instance from the pool
     try:
-        success = process_link(driver, link, idx)
+        success = process_link(driver, link, idx, download_dir)
         if not success:
             logging.warning(f"Failed to process link {idx}. Moving to next link.")
     finally:
@@ -180,7 +179,7 @@ def main():
         links = [link.strip() for link in file.readlines() if link.strip()]
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_PROCESSES) as executor:
-        list(executor.map(process_link_with_own_driver, enumerate(links, start=1)))
+        list(executor.map(lambda x: process_link_with_own_driver(x, download_dir), enumerate(links, start=1)))
 
     logging.info("Download process completed.")
     rename_files_remove_splitted(download_dir)
