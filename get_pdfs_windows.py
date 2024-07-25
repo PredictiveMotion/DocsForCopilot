@@ -1,6 +1,7 @@
 import os
 import time
 import logging
+import argparse
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -159,14 +160,23 @@ def rename_files_remove_splitted(download_dir):
                 )
 
 
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Download PDFs from a list of links.")
+    parser.add_argument("--download_dir", default="downloaded_pdfs", help="Directory to save downloaded PDFs")
+    parser.add_argument("--links_file", default="framework452_links.txt", help="File containing links to process")
+    return parser.parse_args()
+
 def main():
-    download_dir = "downloaded_pdfs"
+    args = parse_arguments()
+    download_dir = args.download_dir
+    links_file = args.links_file
+
     if not os.path.exists(download_dir):
         os.makedirs(download_dir)
 
     create_driver_pool(NUM_PROCESSES)  # Initialize the WebDriver pool
 
-    with open("framework452_links.txt", "r") as file:
+    with open(links_file, "r") as file:
         links = [link.strip() for link in file.readlines() if link.strip()]
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_PROCESSES) as executor:
@@ -179,7 +189,6 @@ def main():
     while not driver_queue.empty():
         driver = driver_queue.get()
         driver.quit()
-
 
 if __name__ == "__main__":
     main()
