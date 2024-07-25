@@ -161,14 +161,22 @@ def rename_files_remove_splitted(download_dir):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Download PDFs from a list of links.")
-    parser.add_argument("--download_dir", default="downloaded_pdfs", help="Directory to save downloaded PDFs")
-    parser.add_argument("--links_file", default="framework452_links.txt", help="File containing links to process")
+    parser.add_argument("--download_dir", help="Directory to save downloaded PDFs")
+    parser.add_argument("--links_file", help="File containing links to process")
     return parser.parse_args()
 
 def main():
     args = parse_arguments()
-    download_dir = args.download_dir
-    links_file = args.links_file
+    
+    if not args.download_dir or not args.links_file:
+        print("Usage: python get_pdfs_windows.py --download_dir <directory> --links_file <file>")
+        print("Options:")
+        print("  --download_dir  Directory to save downloaded PDFs (default: downloaded_pdfs)")
+        print("  --links_file    File containing links to process (default: framework452_links.txt)")
+        return
+
+    download_dir = args.download_dir or "downloaded_pdfs"
+    links_file = args.links_file or "framework452_links.txt"
 
     if not os.path.exists(download_dir):
         os.makedirs(download_dir)
