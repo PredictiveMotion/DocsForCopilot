@@ -32,9 +32,7 @@ def pdf_to_markdown(input_pdf_path, output_markdown_path, converter="pdfminer"):
 
 
 
-def main():
-    args = parse_arguments()
-    
+def process_arguments(args):
     if args.config:
         pdf_directory, markdown_directory, converter_to_use = get_config_settings(args.config)
     else:
@@ -47,6 +45,12 @@ def main():
         sys.exit(1)
 
     os.makedirs(markdown_directory, exist_ok=True)
+
+    return pdf_directory, markdown_directory, converter_to_use
+
+def main():
+    args = parse_arguments()
+    pdf_directory, markdown_directory, converter_to_use = process_arguments(args)
 
     pdf_files = [f for f in os.listdir(pdf_directory) if f.endswith(".pdf")]
     total_files = len(pdf_files)
