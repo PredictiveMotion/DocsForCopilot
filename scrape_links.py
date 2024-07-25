@@ -31,6 +31,7 @@ def get_links(driver, url, view):
         for link in links
         if link.get_attribute("href").startswith("https://learn.microsoft.com/en-us/dotnet/api/")
         and f"view={view}" in link.get_attribute("href")
+        and not link.get_attribute("href").endswith("#")
     ]
 
 def save_links(links, output_file):
@@ -75,7 +76,11 @@ def main():
     try:
         with setup_driver(chrome_driver_path) as driver:
             links = get_links(driver, url_to_parse, view)
-            save_links(links, output_file)
+            if links:
+                save_links(links, output_file)
+                print(f"{len(links)} links have been saved to {output_file}")
+            else:
+                print(f"No links found for the view: {view}")
     except TimeoutException:
         print("Timed out waiting for page to load")
     except Exception as e:
