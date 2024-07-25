@@ -9,7 +9,7 @@ def get_config_settings(config_file):
         config["PDFSettings"]["converter"]
     )
 
-def configure_paths():
+def get_configuration():
     args = parse_arguments()
     
     if args.config:
