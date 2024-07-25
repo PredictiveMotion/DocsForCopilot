@@ -1,9 +1,4 @@
-"""
-Scrape links from the selected Microsoft .NET API documentation.
-
-This script uses Selenium WebDriver to navigate to the selected .NET API
-documentation page, extract all relevant links, and save them to a text file.
-"""
+"""Scrape links from Microsoft .NET API documentation using Selenium WebDriver."""
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -14,7 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
 def setup_driver(chrome_driver_path):
-    """Set up and return the Chrome WebDriver."""
+    """Set up and return the Chrome WebDriver with custom options."""
     options = Options()
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", False)
@@ -22,7 +17,7 @@ def setup_driver(chrome_driver_path):
     return webdriver.Chrome(service=service, options=options)
 
 def get_links(driver, url, view):
-    """Navigate to the URL and extract relevant links."""
+    """Navigate to the URL and extract relevant links matching the specified view."""
     driver.get(url)
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//a[@href]")))
     links = driver.find_elements(By.XPATH, "//a[@href]")
@@ -34,7 +29,7 @@ def get_links(driver, url, view):
     ]
 
 def save_links(links, output_file):
-    """Save the extracted links to a file."""
+    """Save the extracted links to a file and print them to console."""
     with open(output_file, "w", encoding="utf-8") as file:
         for idx, link in enumerate(links, start=1):
             print(f"{idx}: {link}")
@@ -42,12 +37,12 @@ def save_links(links, output_file):
     print(f"Links have been saved to {output_file}")
 
 def read_urls_from_file(file_path):
-    """Read URLs from the specified file."""
+    """Read URLs from the specified file, ignoring empty lines."""
     with open(file_path, "r") as file:
         return [line.strip() for line in file if line.strip()]
 
 def select_url(urls):
-    """Prompt the user to select a URL from the list."""
+    """Prompt the user to select a URL from the list and return the chosen URL."""
     print("Available URLs:")
     for idx, url in enumerate(urls, start=1):
         print(f"{idx}. {url}")
@@ -63,6 +58,7 @@ def select_url(urls):
             print("Invalid input. Please enter a number.")
 
 def main():
+    """Main function to set up the driver, scrape links, and save them to a file."""
     chrome_driver_path = "c:/development/samples/pdfToMarkdown/chromedriver.exe"
     urls_file = "links_to_scrape.txt"
     
