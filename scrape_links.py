@@ -1,7 +1,7 @@
 """
-Scrape links from the Microsoft .NET Framework 4.5.2 API documentation.
+Scrape links from the selected Microsoft .NET API documentation.
 
-This script uses Selenium WebDriver to navigate to the .NET Framework 4.5.2 API
+This script uses Selenium WebDriver to navigate to the selected .NET API
 documentation page, extract all relevant links, and save them to a text file.
 """
 
@@ -30,7 +30,7 @@ def get_links(driver, url):
         link.get_attribute("href")
         for link in links
         if link.get_attribute("href").startswith("https://learn.microsoft.com/en-us/dotnet/api/")
-        and "view=netframework-4.5.2" in link.get_attribute("href")
+        and "view=" in link.get_attribute("href")
     ]
 
 def save_links(links, output_file):
@@ -41,10 +41,35 @@ def save_links(links, output_file):
             file.write(link + "\n")
     print(f"Links have been saved to {output_file}")
 
+def read_urls_from_file(file_path):
+    """Read URLs from the specified file."""
+    with open(file_path, "r") as file:
+        return [line.strip() for line in file if line.strip()]
+
+def select_url(urls):
+    """Prompt the user to select a URL from the list."""
+    print("Available URLs:")
+    for idx, url in enumerate(urls, start=1):
+        print(f"{idx}. {url}")
+    
+    while True:
+        try:
+            choice = int(input("Enter the number of the URL you want to scrape: "))
+            if 1 <= choice <= len(urls):
+                return urls[choice - 1]
+            else:
+                print("Invalid choice. Please try again.")
+        except ValueError:
+            print("Invalid input. Please enter a number.")
+
 def main():
     chrome_driver_path = "c:/development/samples/pdfToMarkdown/chromedriver.exe"
-    url_to_parse = "https://learn.microsoft.com/en-us/dotnet/api/?view=netframework-4.5.2&preserve-view=true"
-    output_file = "framework452_links.txt"
+    urls_file = "links_to_scrape.txt"
+    
+    urls = read_urls_from_file(urls_file)
+    url_to_parse = select_url(urls)
+    
+    output_file = f"scraped_links_{url_to_parse.split('view=')[-1].split('&')[0]}.txt"
 
     try:
         with setup_driver(chrome_driver_path) as driver:
