@@ -3,7 +3,7 @@ import sys
 
 from converters.pdf_to_markdown_pdfminer import pdf_to_markdown_pdfminer
 from converters.pdf_to_markdown_markdownify import pdf_to_markdown_markdownify
-from utils.configure_paths import parse_arguments_and_configure_paths
+from utils.configure_paths import configure_paths
 
 
 
@@ -35,7 +35,7 @@ def pdf_to_markdown(input_pdf_path, output_markdown_path, converter="pdfminer"):
 
 
 def main():
-    pdf_directory, markdown_directory, converter_to_use = parse_arguments_and_configure_paths()
+    pdf_directory, markdown_directory, converter_to_use = configure_paths()
     os.makedirs(markdown_directory, exist_ok=True)
 
     for filename in os.listdir(pdf_directory):
