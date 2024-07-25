@@ -21,7 +21,7 @@ def setup_driver(chrome_driver_path):
     service = Service(executable_path=chrome_driver_path)
     return webdriver.Chrome(service=service, options=options)
 
-def get_links(driver, url):
+def get_links(driver, url, view):
     """Navigate to the URL and extract relevant links."""
     driver.get(url)
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//a[@href]")))
@@ -30,7 +30,7 @@ def get_links(driver, url):
         link.get_attribute("href")
         for link in links
         if link.get_attribute("href").startswith("https://learn.microsoft.com/en-us/dotnet/api/")
-        and "view=" in link.get_attribute("href")
+        and f"view={view}" in link.get_attribute("href")
     ]
 
 def save_links(links, output_file):
@@ -69,11 +69,12 @@ def main():
     urls = read_urls_from_file(urls_file)
     url_to_parse = select_url(urls)
     
-    output_file = f"scraped_links_{url_to_parse.split('view=')[-1].split('&')[0]}.txt"
+    view = url_to_parse.split('view=')[-1].split('&')[0]
+    output_file = f"scraped_links_{view}.txt"
 
     try:
         with setup_driver(chrome_driver_path) as driver:
-            links = get_links(driver, url_to_parse)
+            links = get_links(driver, url_to_parse, view)
             save_links(links, output_file)
     except TimeoutException:
         print("Timed out waiting for page to load")
