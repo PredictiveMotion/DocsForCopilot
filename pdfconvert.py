@@ -3,8 +3,7 @@ import sys
 
 from converters.pdf_to_markdown_pdfminer import pdf_to_markdown_pdfminer
 from converters.pdf_to_markdown_markdownify import pdf_to_markdown_markdownify
-from utils.configure_paths import get_config_settings
-from utils.argument_parser import parse_arguments
+from utils.argument_parser import parse_arguments, process_arguments
 
 def pdf_to_markdown(input_pdf_path, output_markdown_path, converter="pdfminer"):
     try:
@@ -28,25 +27,6 @@ def pdf_to_markdown(input_pdf_path, output_markdown_path, converter="pdfminer"):
         if os.path.exists(output_markdown_path):
             os.remove(output_markdown_path)
             print(f"Deleted offending Markdown file: {output_markdown_path}")
-
-
-
-
-def process_arguments(args):
-    if args.config:
-        pdf_directory, markdown_directory, converter_to_use = get_config_settings(args.config)
-    else:
-        pdf_directory = args.pdf_dir
-        markdown_directory = args.md_dir
-        converter_to_use = args.converter
-
-    if not all([pdf_directory, markdown_directory, converter_to_use]):
-        print("Error: Missing required arguments. Use --help for usage information.")
-        sys.exit(1)
-
-    os.makedirs(markdown_directory, exist_ok=True)
-
-    return pdf_directory, markdown_directory, converter_to_use
 
 def main():
     args = parse_arguments()
