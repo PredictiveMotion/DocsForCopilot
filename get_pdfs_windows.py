@@ -33,7 +33,7 @@ NUM_PROCESSES = 5
 driver_queue = Queue()
 
 
-def initialize_driver():
+def initialize_driver(download_dir):
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
@@ -45,7 +45,7 @@ def initialize_driver():
 
     # Set up download preferences
     prefs = {
-        "download.default_directory": os.path.abspath("downloaded_pdfs"),
+        "download.default_directory": os.path.abspath(download_dir),
         "download.prompt_for_download": False,
         "download.directory_upgrade": True,
         "plugins.always_open_pdf_externally": True,
@@ -125,9 +125,9 @@ def process_link(driver, link, idx, download_dir):
     return False
 
 
-def create_driver_pool(num_instances):
+def create_driver_pool(num_instances, download_dir):
     for _ in range(num_instances):
-        driver = initialize_driver()
+        driver = initialize_driver(download_dir)
         if driver:
             driver_queue.put(driver)
 
@@ -173,7 +173,7 @@ def main():
     if not os.path.exists(download_dir):
         os.makedirs(download_dir)
 
-    create_driver_pool(NUM_PROCESSES)  # Initialize the WebDriver pool
+    create_driver_pool(NUM_PROCESSES, download_dir)  # Initialize the WebDriver pool
 
     with open(links_file, "r") as file:
         links = [link.strip() for link in file.readlines() if link.strip()]
