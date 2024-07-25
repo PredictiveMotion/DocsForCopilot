@@ -11,8 +11,10 @@ from selenium.common.exceptions import TimeoutException
 def setup_driver(chrome_driver_path):
     """Set up and return the Chrome WebDriver with custom options."""
     options = Options()
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
     options.add_experimental_option("useAutomationExtension", False)
+    options.add_argument("--log-level=3")  # Only show fatal errors
+    options.add_argument("--silent")
     service = Service(executable_path=chrome_driver_path)
     return webdriver.Chrome(service=service, options=options)
 
