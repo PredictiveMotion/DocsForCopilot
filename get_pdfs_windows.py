@@ -21,7 +21,7 @@ from selenium.common.exceptions import (
 
 # Set up logging
 logging.basicConfig(
-    filename="pdf_download.log",
+    filename="../logs/pdf_download.log",
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
@@ -256,15 +256,15 @@ def main():
         )
         print("Options:")
         print(
-            "  --download_dir  Directory to save downloaded PDFs (default: downloaded_pdfs)"
+            "  --download_dir  Directory to save downloaded PDFs (default: ../data/downloaded_pdfs)"
         )
         print(
-            "  --links_file    File containing links to process (default: framework452_links.txt)"
+            "  --links_file    File containing links to process (default: ../data/framework452_links.txt)"
         )
         return
 
-    download_dir = args.download_dir or "downloaded_pdfs"
-    links_file = args.links_file or "framework452_links.txt"
+    download_dir = args.download_dir or "../data/downloaded_pdfs"
+    links_file = args.links_file or "../data/framework452_links.txt"
 
     if not os.path.exists(download_dir):
         os.makedirs(download_dir)
