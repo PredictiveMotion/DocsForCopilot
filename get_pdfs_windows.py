@@ -102,7 +102,9 @@ def main():
     download_dir = args.download_dir or DEFAULT_DOWNLOAD_DIR
     links_file = args.links_file or DEFAULT_LINKS_FILE
 
+    print(f"About to set up environment. Log file should be: {LOG_FILE}")
     setup_environment(download_dir)
+    print("Environment setup completed")
     links = read_links_from_file(links_file)
     process_links(links, download_dir)
     cleanup_environment(download_dir)
