@@ -2,14 +2,15 @@ import os
 import sys
 
 # Ensure the parent directory of 'src' is in the sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(project_root)
 
 from converters.pdf_to_markdown_pdfminer import pdf_to_markdown_pdfminer
 from converters.pdf_to_markdown_markdownify import pdf_to_markdown_markdownify
-from utils.argument_parser import parse_arguments, process_arguments
+from utils import parse_arguments, process_arguments
 
-# Determine the project root directory
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
+# Project root is already defined when setting up sys.path
+PROJECT_ROOT = project_root
 
 def pdf_to_markdown(input_pdf_path, output_markdown_path, converter="pdfminer"):
     try:
