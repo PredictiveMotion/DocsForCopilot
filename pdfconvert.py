@@ -6,7 +6,7 @@ from converters.pdf_to_markdown_markdownify import pdf_to_markdown_markdownify
 from utils.argument_parser import parse_arguments, process_arguments
 
 # Determine the project root directory
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
 
 def pdf_to_markdown(input_pdf_path, output_markdown_path, converter="pdfminer"):
     try:
@@ -41,9 +41,9 @@ def main():
     total_files = len(pdf_files)
 
     for index, filename in enumerate(pdf_files, start=1):
-        pdf_path = os.path.join(PROJECT_ROOT, pdf_directory, filename)
+        pdf_path = os.path.join(pdf_directory, filename)
         markdown_filename = os.path.splitext(filename)[0] + ".md"
-        markdown_path = os.path.join(PROJECT_ROOT, markdown_directory, markdown_filename)
+        markdown_path = os.path.join(markdown_directory, markdown_filename)
         print(f"Processing file {index} of {total_files}: {filename}")
         pdf_to_markdown(pdf_path, markdown_path, converter_to_use)
         print(f"Completed file {index} of {total_files}: {filename}")
