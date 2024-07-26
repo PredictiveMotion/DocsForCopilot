@@ -37,6 +37,14 @@ def main():
 
     pdf_directory = os.path.join(PROJECT_ROOT, pdf_directory)
     markdown_directory = os.path.join(PROJECT_ROOT, markdown_directory)
+    if not os.path.exists(pdf_directory):
+        print(f"PDF directory does not exist: {pdf_directory}")
+        sys.exit(1)
+
+    if not os.path.exists(markdown_directory):
+        os.makedirs(markdown_directory)
+        print(f"Created Markdown directory: {markdown_directory}")
+
     pdf_files = [f for f in os.listdir(pdf_directory) if f.endswith(".pdf")]
     total_files = len(pdf_files)
 
