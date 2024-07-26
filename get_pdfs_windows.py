@@ -8,9 +8,9 @@ import threading
 from queue import Queue
 import concurrent.futures
 from selenium import webdriver
+from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import (
@@ -53,7 +53,7 @@ from file_operations import (
     cleanup_crdownload_files,
 )
 
-# Global variables
+# Constants and global variables
 driver_queue = Queue()
 file_lock = threading.Lock()
 
@@ -64,19 +64,14 @@ def parse_arguments():
     parser.add_argument("--links_file", help="File containing links to process")
     return parser.parse_args()
 
-def main():
-    """Main function to orchestrate the PDF download process."""
-    args = parse_arguments()
-
-    download_dir = args.download_dir or DEFAULT_DOWNLOAD_DIR
-    links_file = args.links_file or DEFAULT_LINKS_FILE
-
+def setup_environment(download_dir):
+    """Set up the environment for PDF downloads."""
     setup_logging(LOG_FILE)
     create_directory(download_dir)
     create_driver_pool(NUM_PROCESSES, download_dir, driver_queue)
 
-    links = read_links_from_file(links_file)
-
+def process_links(links, download_dir):
+    """Process links using a thread pool."""
     with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_PROCESSES) as executor:
         list(
             executor.map(
@@ -85,11 +80,23 @@ def main():
             )
         )
 
+def cleanup_environment(download_dir):
+    """Perform cleanup operations after processing."""
     logging.info("Download process completed.")
     rename_files_remove_splitted(download_dir)
     cleanup_crdownload_files(download_dir)
-
     cleanup_driver_pool(driver_queue)
+
+def main():
+    """Main function to orchestrate the PDF download process."""
+    args = parse_arguments()
+    download_dir = args.download_dir or DEFAULT_DOWNLOAD_DIR
+    links_file = args.links_file or DEFAULT_LINKS_FILE
+
+    setup_environment(download_dir)
+    links = read_links_from_file(links_file)
+    process_links(links, download_dir)
+    cleanup_environment(download_dir)
 
 if __name__ == "__main__":
     main()
