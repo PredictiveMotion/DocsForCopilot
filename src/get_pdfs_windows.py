@@ -6,6 +6,13 @@ import logging
 import argparse
 import concurrent.futures
 from queue import Queue
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
 from config import CHROME_DRIVER_PATH, NUM_PROCESSES, LOG_FILE, DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
 from utils import setup_logging, create_directory, read_links_from_file
 from webdriver_utils import initialize_driver, create_driver_pool, cleanup_driver_pool
@@ -80,8 +87,7 @@ def download_pdf(driver, link, idx, download_dir):
 
 def file_exists(file_path):
     """Check if a file exists at the given path."""
-    with file_lock:
-        return os.path.exists(file_path)
+    return os.path.exists(file_path)
 
 def click_pdf_button(driver, idx):
     """Attempt to click the PDF download button on the page."""
@@ -119,27 +125,25 @@ def wait_for_download(pdf_path, crdownload_path, idx, pdf_filename):
 
 def check_download_complete(pdf_path, idx, pdf_filename):
     """Check if the PDF download has completed successfully."""
-    with file_lock:
-        if os.path.exists(pdf_path):
-            if os.path.getsize(pdf_path) > 0:
-                logging.info(f"Downloaded PDF for link {idx}: {pdf_filename}")
-                return True
-            else:
-                os.remove(pdf_path)
-                logging.warning(f"Empty PDF file removed for link {idx}: {pdf_filename}")
+    if os.path.exists(pdf_path):
+        if os.path.getsize(pdf_path) > 0:
+            logging.info(f"Downloaded PDF for link {idx}: {pdf_filename}")
+            return True
+        else:
+            os.remove(pdf_path)
+            logging.warning(f"Empty PDF file removed for link {idx}: {pdf_filename}")
     return False
 
 def cleanup_and_check(pdf_path, crdownload_path, idx, pdf_filename):
     """Perform final cleanup and check if the download was successful."""
-    with file_lock:
-        if os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 0:
-            logging.info(f"Successfully downloaded PDF for link {idx}: {pdf_filename}")
-            return True
-        if os.path.exists(crdownload_path):
-            os.remove(crdownload_path)
-            logging.warning(f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload")
-        logging.warning(f"Failed to download PDF for link {idx}: {pdf_filename}")
-        return False
+    if os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 0:
+        logging.info(f"Successfully downloaded PDF for link {idx}: {pdf_filename}")
+        return True
+    if os.path.exists(crdownload_path):
+        os.remove(crdownload_path)
+        logging.warning(f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload")
+    logging.warning(f"Failed to download PDF for link {idx}: {pdf_filename}")
+    return False
 
 
 def process_link(driver, link, idx, download_dir):
@@ -216,10 +220,9 @@ def parse_arguments():
 
 def cleanup_crdownload_files(download_dir):
     """Remove any leftover .crdownload files in the download directory."""
-    with file_lock:
-        for filename in os.listdir(download_dir):
-            if filename.endswith(".crdownload"):
-                remove_crdownload_file(download_dir, filename)
+    for filename in os.listdir(download_dir):
+        if filename.endswith(".crdownload"):
+            remove_crdownload_file(download_dir, filename)
 
 def remove_crdownload_file(download_dir, filename):
     """Attempt to remove a specific .crdownload file."""
