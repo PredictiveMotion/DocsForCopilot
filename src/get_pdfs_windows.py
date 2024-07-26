@@ -180,7 +180,7 @@ def create_driver_pool(num_instances, download_dir, driver_queue):
     print(f"Driver pool created with {driver_queue.qsize()} instances")
 
 
-def process_link_with_own_driver(link_idx_tuple, download_dir):
+def process_link_with_own_driver(link_idx_tuple, download_dir, driver_queue):
     """Process a link using a WebDriver instance from the pool."""
     idx, link = link_idx_tuple
     driver = driver_queue.get()  # Borrow a WebDriver instance from the pool
