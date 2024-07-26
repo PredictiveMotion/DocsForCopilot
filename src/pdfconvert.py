@@ -5,17 +5,9 @@ import sys
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, project_root)
 
-# Remove the current directory (src) from sys.path if it's there
-current_dir = os.path.dirname(__file__)
-if current_dir in sys.path:
-    sys.path.remove(current_dir)
-
 from converters.pdf_to_markdown_pdfminer import pdf_to_markdown_pdfminer
 from converters.pdf_to_markdown_markdownify import pdf_to_markdown_markdownify
-from utils import parse_arguments, process_arguments
-
-# Project root is already defined when setting up sys.path
-PROJECT_ROOT = project_root
+from utils.argument_parser import parse_arguments, process_arguments
 
 def pdf_to_markdown(input_pdf_path, output_markdown_path, converter="pdfminer"):
     try:
