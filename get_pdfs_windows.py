@@ -2,30 +2,22 @@ import os
 import time
 import logging
 import argparse
+import threading
+from queue import Queue
+import concurrent.futures
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import (
-    TimeoutException,
-    NoSuchElementException,
-    WebDriverException,
-)
-from queue import Queue
-import concurrent.futures
-import threading
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
 
 # Set up logging
-logging.basicConfig(
-    filename="pdf_download.log",
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-)
+logging.basicConfig(filename="pdf_download.log", level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 # Replace with your ChromeDriver path
-chrome_driver_path = "c:/development/samples/pdfToMarkdown/chromedriver.exe"
+CHROME_DRIVER_PATH = "c:/development/samples/pdfToMarkdown/chromedriver.exe"
 
 # Adjustable constant for the number of Chrome processes
 NUM_PROCESSES = 5
