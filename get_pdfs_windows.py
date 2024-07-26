@@ -69,9 +69,9 @@ def initialize_driver(download_dir):
 def download_pdf(driver, link, idx, download_dir):
     try:
         # Extract the PDF filename from the link
-        pdf_filename = link.split('/')[-1].replace('?view=netframework-4.5.2', '') + '.pdf'
+        pdf_filename = link.split('/')[-1].split('?')[0] + '.pdf'
         pdf_path = os.path.join(download_dir, pdf_filename)
-        crdownload_path = pdf_path + '.crdownload'
+        crdownload_path = os.path.join(download_dir, f"{pdf_filename}.crdownload")
 
         with file_lock:
             # Check if the file already exists
@@ -95,7 +95,7 @@ def download_pdf(driver, link, idx, download_dir):
                 )
 
                 # Wait for download to complete
-                max_wait_time = 180  # Increased wait time to 3 minutes
+                max_wait_time = 300  # Increased wait time to 5 minutes
                 start_time = time.time()
                 while time.time() - start_time < max_wait_time:
                     with file_lock:
@@ -108,9 +108,9 @@ def download_pdf(driver, link, idx, download_dir):
                                 logging.warning(f"Empty PDF file removed for link {idx}: {pdf_filename}")
                         
                         if os.path.exists(crdownload_path):
-                            time.sleep(1)
+                            time.sleep(2)
                         else:
-                            time.sleep(2)  # Wait a bit more to ensure download is complete
+                            time.sleep(5)  # Wait a bit more to ensure download is complete
                             break
 
                 # Final check and cleanup
@@ -199,6 +199,17 @@ def parse_arguments():
     parser.add_argument("--links_file", help="File containing links to process")
     return parser.parse_args()
 
+def cleanup_crdownload_files(download_dir):
+    with file_lock:
+        for filename in os.listdir(download_dir):
+            if filename.endswith('.crdownload'):
+                file_path = os.path.join(download_dir, filename)
+                try:
+                    os.remove(file_path)
+                    logging.info(f"Removed leftover .crdownload file: {filename}")
+                except Exception as e:
+                    logging.error(f"Error removing .crdownload file {filename}: {str(e)}")
+
 def main():
     args = parse_arguments()
     
@@ -225,6 +236,7 @@ def main():
 
     logging.info("Download process completed.")
     rename_files_remove_splitted(download_dir)
+    cleanup_crdownload_files(download_dir)
 
     # Cleanup: Quit all WebDriver instances in the pool
     while not driver_queue.empty():
