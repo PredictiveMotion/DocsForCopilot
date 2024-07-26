@@ -200,8 +200,6 @@ def parse_arguments():
     return parser.parse_args()
 
 
-import time
-
 
 def cleanup_crdownload_files(download_dir):
     with file_lock:
@@ -254,7 +252,7 @@ def main():
 
     create_driver_pool(NUM_PROCESSES, download_dir)  # Initialize the WebDriver pool
 
-    with open(links_file, "r") as file:
+    with open(links_file, "r", encoding="utf-8") as file:
         links = [link.strip() for link in file.readlines() if link.strip()]
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_PROCESSES) as executor:
