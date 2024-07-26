@@ -1,11 +1,9 @@
 import os
 import sys
 
-import os
-import sys
-
 # Ensure the parent directory of 'src' is in the sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
 
 from converters.pdf_to_markdown_pdfminer import pdf_to_markdown_pdfminer
 from converters.pdf_to_markdown_markdownify import pdf_to_markdown_markdownify
