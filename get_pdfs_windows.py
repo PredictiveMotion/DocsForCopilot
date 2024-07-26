@@ -35,8 +35,7 @@ from utils import (
 
 # Create log directory if it doesn't exist
 log_dir = os.path.dirname(LOG_FILE)
-if not os.path.exists(log_dir):
-    os.makedirs(log_dir)
+create_directory(log_dir)
 from webdriver_utils import (
     initialize_driver,
     create_driver_pool,
