@@ -19,6 +19,11 @@ from selenium.common.exceptions import (
     WebDriverException,
 )
 
+# Ensure log directory exists
+log_dir = os.path.dirname("../logs/pdf_download.log")
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
 # Set up logging
 logging.basicConfig(
     filename="../logs/pdf_download.log",
