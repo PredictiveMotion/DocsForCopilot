@@ -27,7 +27,7 @@ logging.basicConfig(
 )
 
 # Replace with your ChromeDriver path
-CHROME_DRIVER_PATH = "c:/development/samples/pdfToMarkdown/chromedriver.exe"
+CHROME_DRIVER_PATH = "chrome/chrome_windows/chromedriver.exe"
 
 # Adjustable constant for the number of Chrome processes
 NUM_PROCESSES = 5
