@@ -19,24 +19,24 @@ from selenium.common.exceptions import (
     WebDriverException,
 )
 
-# Set up logging
+# Constants
+CHROME_DRIVER_PATH = "chrome/chrome_windows/chromedriver.exe"
+NUM_PROCESSES = 5
+LOG_FILE = "../logs/pdf_download.log"
+DEFAULT_DOWNLOAD_DIR = "../data/downloaded_pdfs"
+DEFAULT_LINKS_FILE = "../data/framework452_links.txt"
+
+# Global variables
+driver_queue = Queue()
+file_lock = threading.Lock()
+
+# Logging setup
 logging.basicConfig(
-    filename="../logs/pdf_download.log",
+    filename=LOG_FILE,
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logging.getLogger().setLevel(logging.INFO)
-
-# Replace with your ChromeDriver path
-CHROME_DRIVER_PATH = "chrome/chrome_windows/chromedriver.exe"
-
-# Adjustable constant for the number of Chrome processes
-NUM_PROCESSES = 5
-
-# Initialize a queue for WebDriver instances and a lock for file operations
-driver_queue = Queue()
-file_lock = threading.Lock()
-
 
 def initialize_driver(download_dir):
     """Initialize and configure a Chrome WebDriver instance."""
@@ -49,7 +49,6 @@ def initialize_driver(download_dir):
     options.add_argument("--disable-web-security")
     options.add_argument("--allow-running-insecure-content")
 
-    # Set up download preferences
     prefs = {
         "download.default_directory": os.path.abspath(download_dir),
         "download.prompt_for_download": False,
@@ -68,23 +67,6 @@ def initialize_driver(download_dir):
     except Exception as e:
         logging.error(f"Failed to initialize WebDriver: {str(e)}")
         return None
-
-
-def download_pdf(driver, link, idx, download_dir):
-    """Attempt to download a PDF from the given link."""
-    pdf_filename = link.split("/")[-1].split("?")[0] + ".pdf"
-    pdf_path = os.path.join(download_dir, pdf_filename)
-    crdownload_path = os.path.join(download_dir, f"{pdf_filename}.crdownload")
-
-    if file_exists(pdf_path):
-        logging.info(f"PDF already exists for link {idx}: {pdf_filename}")
-        return True
-
-    if click_pdf_button(driver, idx):
-        return wait_for_download(pdf_path, crdownload_path, idx, pdf_filename)
-
-    logging.warning(f"No PDF button found for link {idx}. Skipping.")
-    return False
 
 def file_exists(file_path):
     """Check if a file exists at the given path."""
@@ -111,20 +93,6 @@ def click_pdf_button(driver, idx):
             logging.warning(f"Selector {selector} not found for link {idx}")
     return False
 
-def wait_for_download(pdf_path, crdownload_path, idx, pdf_filename):
-    """Wait for the PDF download to complete."""
-    max_wait_time = 300  # 5 minutes
-    start_time = time.time()
-    while time.time() - start_time < max_wait_time:
-        if check_download_complete(pdf_path, idx, pdf_filename):
-            return True
-        if file_exists(crdownload_path):
-            time.sleep(2)
-        else:
-            time.sleep(5)
-            break
-    return cleanup_and_check(pdf_path, crdownload_path, idx, pdf_filename)
-
 def check_download_complete(pdf_path, idx, pdf_filename):
     """Check if the PDF download has completed successfully."""
     with file_lock:
@@ -149,6 +117,35 @@ def cleanup_and_check(pdf_path, crdownload_path, idx, pdf_filename):
         logging.warning(f"Failed to download PDF for link {idx}: {pdf_filename}")
         return False
 
+def wait_for_download(pdf_path, crdownload_path, idx, pdf_filename):
+    """Wait for the PDF download to complete."""
+    max_wait_time = 300  # 5 minutes
+    start_time = time.time()
+    while time.time() - start_time < max_wait_time:
+        if check_download_complete(pdf_path, idx, pdf_filename):
+            return True
+        if file_exists(crdownload_path):
+            time.sleep(2)
+        else:
+            time.sleep(5)
+            break
+    return cleanup_and_check(pdf_path, crdownload_path, idx, pdf_filename)
+
+def download_pdf(driver, link, idx, download_dir):
+    """Attempt to download a PDF from the given link."""
+    pdf_filename = link.split("/")[-1].split("?")[0] + ".pdf"
+    pdf_path = os.path.join(download_dir, pdf_filename)
+    crdownload_path = os.path.join(download_dir, f"{pdf_filename}.crdownload")
+
+    if file_exists(pdf_path):
+        logging.info(f"PDF already exists for link {idx}: {pdf_filename}")
+        return True
+
+    if click_pdf_button(driver, idx):
+        return wait_for_download(pdf_path, crdownload_path, idx, pdf_filename)
+
+    logging.warning(f"No PDF button found for link {idx}. Skipping.")
+    return False
 
 def process_link(driver, link, idx, download_dir):
     """Process a single link to download its PDF."""
@@ -169,14 +166,12 @@ def process_link(driver, link, idx, download_dir):
 
     return False
 
-
 def create_driver_pool(num_instances, download_dir):
     """Create a pool of WebDriver instances."""
     for _ in range(num_instances):
         driver = initialize_driver(download_dir)
         if driver:
             driver_queue.put(driver)
-
 
 def process_link_with_own_driver(link_idx_tuple, download_dir):
     """Process a link using a WebDriver instance from the pool."""
@@ -188,7 +183,6 @@ def process_link_with_own_driver(link_idx_tuple, download_dir):
             logging.warning(f"Failed to process link {idx}. Moving to next link.")
     finally:
         driver_queue.put(driver)  # Return the WebDriver instance to the pool
-
 
 def rename_files_remove_splitted(download_dir):
     """Rename downloaded files to remove '_splitted' from their names."""
@@ -206,7 +200,6 @@ def rename_files_remove_splitted(download_dir):
                     f"Error renaming file {file_name} to {new_file_name}: {e}"
                 )
 
-
 def parse_arguments():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Download PDFs from a list of links.")
@@ -214,14 +207,13 @@ def parse_arguments():
     parser.add_argument("--links_file", help="File containing links to process")
     return parser.parse_args()
 
-
-
-def cleanup_crdownload_files(download_dir):
-    """Remove any leftover .crdownload files in the download directory."""
-    with file_lock:
-        for filename in os.listdir(download_dir):
-            if filename.endswith(".crdownload"):
-                remove_crdownload_file(download_dir, filename)
+def handle_permission_error(filename, attempt):
+    """Handle permission errors when trying to remove a file."""
+    if attempt < 2:  # If it's not the last attempt
+        logging.warning(f"File {filename} is still in use. Retrying in 5 seconds...")
+        time.sleep(5)
+    else:
+        logging.warning(f"File {filename} is still in use after 3 attempts. Skipping removal.")
 
 def remove_crdownload_file(download_dir, filename):
     """Attempt to remove a specific .crdownload file."""
@@ -237,39 +229,24 @@ def remove_crdownload_file(download_dir, filename):
             logging.error(f"Error removing .crdownload file {filename}: {str(e)}")
             return
 
-def handle_permission_error(filename, attempt):
-    """Handle permission errors when trying to remove a file."""
-    if attempt < 2:  # If it's not the last attempt
-        logging.warning(f"File {filename} is still in use. Retrying in 5 seconds...")
-        time.sleep(5)
-    else:
-        logging.warning(f"File {filename} is still in use after 3 attempts. Skipping removal.")
-
+def cleanup_crdownload_files(download_dir):
+    """Remove any leftover .crdownload files in the download directory."""
+    with file_lock:
+        for filename in os.listdir(download_dir):
+            if filename.endswith(".crdownload"):
+                remove_crdownload_file(download_dir, filename)
 
 def main():
     """Main function to orchestrate the PDF download process."""
     args = parse_arguments()
 
-    if not args.download_dir or not args.links_file:
-        print(
-            "Usage: python get_pdfs_windows.py --download_dir <directory> --links_file <file>"
-        )
-        print("Options:")
-        print(
-            "  --download_dir  Directory to save downloaded PDFs (default: ../data/downloaded_pdfs)"
-        )
-        print(
-            "  --links_file    File containing links to process (default: ../data/framework452_links.txt)"
-        )
-        return
-
-    download_dir = args.download_dir or "../data/downloaded_pdfs"
-    links_file = args.links_file or "../data/framework452_links.txt"
+    download_dir = args.download_dir or DEFAULT_DOWNLOAD_DIR
+    links_file = args.links_file or DEFAULT_LINKS_FILE
 
     if not os.path.exists(download_dir):
         os.makedirs(download_dir)
 
-    create_driver_pool(NUM_PROCESSES, download_dir)  # Initialize the WebDriver pool
+    create_driver_pool(NUM_PROCESSES, download_dir)
 
     with open(links_file, "r", encoding="utf-8") as file:
         links = [link.strip() for link in file.readlines() if link.strip()]
@@ -290,7 +267,6 @@ def main():
     while not driver_queue.empty():
         driver = driver_queue.get()
         driver.quit()
-
 
 if __name__ == "__main__":
     main()
