@@ -11,10 +11,18 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
+from selenium.common.exceptions import (
+    TimeoutException,
+    NoSuchElementException,
+    WebDriverException,
+)
 
 # Set up logging
-logging.basicConfig(filename="pdf_download.log", level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    filename="pdf_download.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
 
 # Replace with your ChromeDriver path
 CHROME_DRIVER_PATH = "c:/development/samples/pdfToMarkdown/chromedriver.exe"
@@ -61,7 +69,7 @@ def initialize_driver(download_dir):
 def download_pdf(driver, link, idx, download_dir):
     try:
         # Extract the PDF filename from the link
-        pdf_filename = link.split('/')[-1].split('?')[0] + '.pdf'
+        pdf_filename = link.split("/")[-1].split("?")[0] + ".pdf"
         pdf_path = os.path.join(download_dir, pdf_filename)
         crdownload_path = os.path.join(download_dir, f"{pdf_filename}.crdownload")
 
@@ -93,28 +101,40 @@ def download_pdf(driver, link, idx, download_dir):
                     with file_lock:
                         if os.path.exists(pdf_path):
                             if os.path.getsize(pdf_path) > 0:
-                                logging.info(f"Downloaded PDF for link {idx}: {pdf_filename}")
+                                logging.info(
+                                    f"Downloaded PDF for link {idx}: {pdf_filename}"
+                                )
                                 return True
                             else:
                                 os.remove(pdf_path)  # Remove empty PDF file
-                                logging.warning(f"Empty PDF file removed for link {idx}: {pdf_filename}")
-                        
+                                logging.warning(
+                                    f"Empty PDF file removed for link {idx}: {pdf_filename}"
+                                )
+
                         if os.path.exists(crdownload_path):
                             time.sleep(2)
                         else:
-                            time.sleep(5)  # Wait a bit more to ensure download is complete
+                            time.sleep(
+                                5
+                            )  # Wait a bit more to ensure download is complete
                             break
 
                 # Final check and cleanup
                 with file_lock:
                     if os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 0:
-                        logging.info(f"Successfully downloaded PDF for link {idx}: {pdf_filename}")
+                        logging.info(
+                            f"Successfully downloaded PDF for link {idx}: {pdf_filename}"
+                        )
                         return True
                     else:
                         if os.path.exists(crdownload_path):
                             os.remove(crdownload_path)
-                            logging.warning(f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload")
-                        logging.warning(f"Failed to download PDF for link {idx}: {pdf_filename}")
+                            logging.warning(
+                                f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload"
+                            )
+                        logging.warning(
+                            f"Failed to download PDF for link {idx}: {pdf_filename}"
+                        )
                         return False
 
             except (TimeoutException, NoSuchElementException):
@@ -128,7 +148,9 @@ def download_pdf(driver, link, idx, download_dir):
         with file_lock:
             if os.path.exists(crdownload_path):
                 os.remove(crdownload_path)
-                logging.warning(f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload")
+                logging.warning(
+                    f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload"
+                )
         return False
 
 
@@ -191,12 +213,14 @@ def parse_arguments():
     parser.add_argument("--links_file", help="File containing links to process")
     return parser.parse_args()
 
+
 import time
+
 
 def cleanup_crdownload_files(download_dir):
     with file_lock:
         for filename in os.listdir(download_dir):
-            if filename.endswith('.crdownload'):
+            if filename.endswith(".crdownload"):
                 file_path = os.path.join(download_dir, filename)
                 for attempt in range(3):  # Try 3 times
                     try:
@@ -205,22 +229,35 @@ def cleanup_crdownload_files(download_dir):
                         break
                     except PermissionError:
                         if attempt < 2:  # If it's not the last attempt
-                            logging.warning(f"File {filename} is still in use. Retrying in 5 seconds...")
+                            logging.warning(
+                                f"File {filename} is still in use. Retrying in 5 seconds..."
+                            )
                             time.sleep(5)
                         else:
-                            logging.warning(f"File {filename} is still in use after 3 attempts. Skipping removal.")
+                            logging.warning(
+                                f"File {filename} is still in use after 3 attempts. Skipping removal."
+                            )
                     except Exception as e:
-                        logging.error(f"Error removing .crdownload file {filename}: {str(e)}")
+                        logging.error(
+                            f"Error removing .crdownload file {filename}: {str(e)}"
+                        )
                         break
+
 
 def main():
     args = parse_arguments()
-    
+
     if not args.download_dir or not args.links_file:
-        print("Usage: python get_pdfs_windows.py --download_dir <directory> --links_file <file>")
+        print(
+            "Usage: python get_pdfs_windows.py --download_dir <directory> --links_file <file>"
+        )
         print("Options:")
-        print("  --download_dir  Directory to save downloaded PDFs (default: downloaded_pdfs)")
-        print("  --links_file    File containing links to process (default: framework452_links.txt)")
+        print(
+            "  --download_dir  Directory to save downloaded PDFs (default: downloaded_pdfs)"
+        )
+        print(
+            "  --links_file    File containing links to process (default: framework452_links.txt)"
+        )
         return
 
     download_dir = args.download_dir or "downloaded_pdfs"
@@ -235,7 +272,12 @@ def main():
         links = [link.strip() for link in file.readlines() if link.strip()]
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_PROCESSES) as executor:
-        list(executor.map(lambda x: process_link_with_own_driver(x, download_dir), enumerate(links, start=1)))
+        list(
+            executor.map(
+                lambda x: process_link_with_own_driver(x, download_dir),
+                enumerate(links, start=1),
+            )
+        )
 
     logging.info("Download process completed.")
     rename_files_remove_splitted(download_dir)
@@ -245,6 +287,7 @@ def main():
     while not driver_queue.empty():
         driver = driver_queue.get()
         driver.quit()
+
 
 if __name__ == "__main__":
     main()
