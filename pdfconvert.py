@@ -35,8 +35,8 @@ def main():
     args = parse_arguments()
     pdf_directory, markdown_directory, converter_to_use = process_arguments(args)
 
-    pdf_directory = os.path.join(PROJECT_ROOT, pdf_directory)
-    markdown_directory = os.path.join(PROJECT_ROOT, markdown_directory)
+    pdf_directory = os.path.abspath(pdf_directory)
+    markdown_directory = os.path.abspath(markdown_directory)
     if not os.path.exists(pdf_directory):
         print(f"PDF directory does not exist: {pdf_directory}")
         sys.exit(1)
