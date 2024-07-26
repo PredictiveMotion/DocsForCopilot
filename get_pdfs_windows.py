@@ -25,6 +25,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
+logging.getLogger().setLevel(logging.INFO)
 
 # Replace with your ChromeDriver path
 CHROME_DRIVER_PATH = "chrome/chrome_windows/chromedriver.exe"
