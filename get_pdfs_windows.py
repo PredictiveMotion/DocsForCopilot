@@ -199,16 +199,27 @@ def parse_arguments():
     parser.add_argument("--links_file", help="File containing links to process")
     return parser.parse_args()
 
+import time
+
 def cleanup_crdownload_files(download_dir):
     with file_lock:
         for filename in os.listdir(download_dir):
             if filename.endswith('.crdownload'):
                 file_path = os.path.join(download_dir, filename)
-                try:
-                    os.remove(file_path)
-                    logging.info(f"Removed leftover .crdownload file: {filename}")
-                except Exception as e:
-                    logging.error(f"Error removing .crdownload file {filename}: {str(e)}")
+                for attempt in range(3):  # Try 3 times
+                    try:
+                        os.remove(file_path)
+                        logging.info(f"Removed leftover .crdownload file: {filename}")
+                        break
+                    except PermissionError:
+                        if attempt < 2:  # If it's not the last attempt
+                            logging.warning(f"File {filename} is still in use. Retrying in 5 seconds...")
+                            time.sleep(5)
+                        else:
+                            logging.warning(f"File {filename} is still in use after 3 attempts. Skipping removal.")
+                    except Exception as e:
+                        logging.error(f"Error removing .crdownload file {filename}: {str(e)}")
+                        break
 
 def main():
     args = parse_arguments()
