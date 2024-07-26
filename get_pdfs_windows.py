@@ -19,6 +19,7 @@ from selenium.common.exceptions import (
     WebDriverException,
 )
 
+import os
 from config import (
     CHROME_DRIVER_PATH,
     NUM_PROCESSES,
