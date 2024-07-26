@@ -8,3 +8,4 @@ NUM_PROCESSES = 5
 LOG_FILE = os.path.join("..", "logs", "pdf_download.log")
 DEFAULT_DOWNLOAD_DIR = os.path.join("..", "data", "downloaded_pdfs")
 DEFAULT_LINKS_FILE = os.path.join("..", "data", "framework452_links.txt")
+REQUIREMENTS_DIR = os.path.join("..", "requirements")
