@@ -67,90 +67,76 @@ def initialize_driver(download_dir):
 
 
 def download_pdf(driver, link, idx, download_dir):
-    try:
-        # Extract the PDF filename from the link
-        pdf_filename = link.split("/")[-1].split("?")[0] + ".pdf"
-        pdf_path = os.path.join(download_dir, pdf_filename)
-        crdownload_path = os.path.join(download_dir, f"{pdf_filename}.crdownload")
+    pdf_filename = link.split("/")[-1].split("?")[0] + ".pdf"
+    pdf_path = os.path.join(download_dir, pdf_filename)
+    crdownload_path = os.path.join(download_dir, f"{pdf_filename}.crdownload")
 
-        with file_lock:
-            # Check if the file already exists
-            if os.path.exists(pdf_path):
-                logging.info(f"PDF already exists for link {idx}: {pdf_filename}")
+    if file_exists(pdf_path):
+        logging.info(f"PDF already exists for link {idx}: {pdf_filename}")
+        return True
+
+    if click_pdf_button(driver, idx):
+        return wait_for_download(pdf_path, crdownload_path, idx, pdf_filename)
+
+    logging.warning(f"No PDF button found for link {idx}. Skipping.")
+    return False
+
+def file_exists(file_path):
+    with file_lock:
+        return os.path.exists(file_path)
+
+def click_pdf_button(driver, idx):
+    selectors = [
+        "//button[@data-bi-name='download-pdf']",
+        "//a[contains(@href, '.pdf')]",
+        "//button[contains(text(), 'Download PDF')]",
+        "//a[contains(text(), 'Download PDF')]",
+    ]
+    for selector in selectors:
+        try:
+            pdf_button = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, selector))
+            )
+            pdf_button.click()
+            logging.info(f"PDF button found and clicked for link {idx} using selector: {selector}")
+            return True
+        except (TimeoutException, NoSuchElementException):
+            logging.warning(f"Selector {selector} not found for link {idx}")
+    return False
+
+def wait_for_download(pdf_path, crdownload_path, idx, pdf_filename):
+    max_wait_time = 300  # 5 minutes
+    start_time = time.time()
+    while time.time() - start_time < max_wait_time:
+        if check_download_complete(pdf_path, idx, pdf_filename):
+            return True
+        if file_exists(crdownload_path):
+            time.sleep(2)
+        else:
+            time.sleep(5)
+            break
+    return cleanup_and_check(pdf_path, crdownload_path, idx, pdf_filename)
+
+def check_download_complete(pdf_path, idx, pdf_filename):
+    with file_lock:
+        if os.path.exists(pdf_path):
+            if os.path.getsize(pdf_path) > 0:
+                logging.info(f"Downloaded PDF for link {idx}: {pdf_filename}")
                 return True
+            else:
+                os.remove(pdf_path)
+                logging.warning(f"Empty PDF file removed for link {idx}: {pdf_filename}")
+    return False
 
-        for selector in [
-            "//button[@data-bi-name='download-pdf']",
-            "//a[contains(@href, '.pdf')]",
-            "//button[contains(text(), 'Download PDF')]",
-            "//a[contains(text(), 'Download PDF')]",
-        ]:
-            try:
-                pdf_button = WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable((By.XPATH, selector))
-                )
-                pdf_button.click()
-                logging.info(
-                    f"PDF button found and clicked for link {idx} using selector: {selector}"
-                )
-
-                # Wait for download to complete
-                max_wait_time = 300  # Increased wait time to 5 minutes
-                start_time = time.time()
-                while time.time() - start_time < max_wait_time:
-                    with file_lock:
-                        if os.path.exists(pdf_path):
-                            if os.path.getsize(pdf_path) > 0:
-                                logging.info(
-                                    f"Downloaded PDF for link {idx}: {pdf_filename}"
-                                )
-                                return True
-                            else:
-                                os.remove(pdf_path)  # Remove empty PDF file
-                                logging.warning(
-                                    f"Empty PDF file removed for link {idx}: {pdf_filename}"
-                                )
-
-                        if os.path.exists(crdownload_path):
-                            time.sleep(2)
-                        else:
-                            time.sleep(
-                                5
-                            )  # Wait a bit more to ensure download is complete
-                            break
-
-                # Final check and cleanup
-                with file_lock:
-                    if os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 0:
-                        logging.info(
-                            f"Successfully downloaded PDF for link {idx}: {pdf_filename}"
-                        )
-                        return True
-                    else:
-                        if os.path.exists(crdownload_path):
-                            os.remove(crdownload_path)
-                            logging.warning(
-                                f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload"
-                            )
-                        logging.warning(
-                            f"Failed to download PDF for link {idx}: {pdf_filename}"
-                        )
-                        return False
-
-            except (TimeoutException, NoSuchElementException):
-                logging.warning(f"Selector {selector} not found for link {idx}")
-                continue
-
-        logging.warning(f"No PDF button found for link {idx}. Skipping.")
-        return False
-    except Exception as e:
-        logging.error(f"Error downloading PDF for link {idx}: {str(e)}")
-        with file_lock:
-            if os.path.exists(crdownload_path):
-                os.remove(crdownload_path)
-                logging.warning(
-                    f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload"
-                )
+def cleanup_and_check(pdf_path, crdownload_path, idx, pdf_filename):
+    with file_lock:
+        if os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 0:
+            logging.info(f"Successfully downloaded PDF for link {idx}: {pdf_filename}")
+            return True
+        if os.path.exists(crdownload_path):
+            os.remove(crdownload_path)
+            logging.warning(f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload")
+        logging.warning(f"Failed to download PDF for link {idx}: {pdf_filename}")
         return False
 
 
@@ -221,27 +207,27 @@ def cleanup_crdownload_files(download_dir):
     with file_lock:
         for filename in os.listdir(download_dir):
             if filename.endswith(".crdownload"):
-                file_path = os.path.join(download_dir, filename)
-                for attempt in range(3):  # Try 3 times
-                    try:
-                        os.remove(file_path)
-                        logging.info(f"Removed leftover .crdownload file: {filename}")
-                        break
-                    except PermissionError:
-                        if attempt < 2:  # If it's not the last attempt
-                            logging.warning(
-                                f"File {filename} is still in use. Retrying in 5 seconds..."
-                            )
-                            time.sleep(5)
-                        else:
-                            logging.warning(
-                                f"File {filename} is still in use after 3 attempts. Skipping removal."
-                            )
-                    except Exception as e:
-                        logging.error(
-                            f"Error removing .crdownload file {filename}: {str(e)}"
-                        )
-                        break
+                remove_crdownload_file(download_dir, filename)
+
+def remove_crdownload_file(download_dir, filename):
+    file_path = os.path.join(download_dir, filename)
+    for attempt in range(3):  # Try 3 times
+        try:
+            os.remove(file_path)
+            logging.info(f"Removed leftover .crdownload file: {filename}")
+            return
+        except PermissionError:
+            handle_permission_error(filename, attempt)
+        except Exception as e:
+            logging.error(f"Error removing .crdownload file {filename}: {str(e)}")
+            return
+
+def handle_permission_error(filename, attempt):
+    if attempt < 2:  # If it's not the last attempt
+        logging.warning(f"File {filename} is still in use. Retrying in 5 seconds...")
+        time.sleep(5)
+    else:
+        logging.warning(f"File {filename} is still in use after 3 attempts. Skipping removal.")
 
 
 def main():
