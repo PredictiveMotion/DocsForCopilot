@@ -3,7 +3,12 @@ import sys
 
 # Ensure the parent directory of 'src' is in the sys.path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(project_root)
+sys.path.insert(0, project_root)
+
+# Remove the current directory (src) from sys.path if it's there
+current_dir = os.path.dirname(__file__)
+if current_dir in sys.path:
+    sys.path.remove(current_dir)
 
 from converters.pdf_to_markdown_pdfminer import pdf_to_markdown_pdfminer
 from converters.pdf_to_markdown_markdownify import pdf_to_markdown_markdownify
