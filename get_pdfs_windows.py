@@ -46,7 +46,7 @@ def initialize_driver(download_dir):
     }
     options.add_experimental_option("prefs", prefs)
 
-    service = Service(executable_path=chrome_driver_path)
+    service = Service(executable_path=CHROME_DRIVER_PATH)
 
     try:
         driver = webdriver.Chrome(service=service, options=options)
