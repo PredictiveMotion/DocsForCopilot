@@ -7,15 +7,17 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+from config import CHROME_DRIVER_PATH
+from utils import get_absolute_path, create_directory
 
-def setup_driver(chrome_driver_path):
+def setup_driver():
     """Set up and return the Chrome WebDriver with custom options."""
     options = Options()
     options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
     options.add_experimental_option("useAutomationExtension", False)
     options.add_argument("--log-level=3")  # Only show fatal errors
     options.add_argument("--silent")
-    service = Service(executable_path=chrome_driver_path)
+    service = Service(executable_path=CHROME_DRIVER_PATH)
     return webdriver.Chrome(service=service, options=options)
 
 def get_links(driver, url, view):
@@ -32,6 +34,7 @@ def get_links(driver, url, view):
 
 def save_links(links, output_file):
     """Save the extracted links to a file and print them to console."""
+    create_directory(os.path.dirname(output_file))
     with open(output_file, "w", encoding="utf-8") as file:
         for idx, link in enumerate(links, start=1):
             print(f"{idx}: {link}")
@@ -61,17 +64,16 @@ def select_url(urls):
 
 def main():
     """Main function to set up the driver, scrape links, and save them to a file."""
-    chrome_driver_path = "chrome/chrome_windows/chromedriver.exe"
-    urls_file = "../data/links_to_scrape.txt"
+    urls_file = get_absolute_path("data/links_to_scrape.txt")
     
     urls = read_urls_from_file(urls_file)
     url_to_parse = select_url(urls)
     
     view = url_to_parse.split('view=')[-1].split('&')[0]
-    output_file = f"../data/scraped_links_{view}.txt"
+    output_file = get_absolute_path(f"data/scraped_links_{view}.txt")
 
     try:
-        with setup_driver(chrome_driver_path) as driver:
+        with setup_driver() as driver:
             links = get_links(driver, url_to_parse, view)
             if links:
                 save_links(links, output_file)
