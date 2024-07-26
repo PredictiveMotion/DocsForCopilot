@@ -92,7 +92,7 @@ def download_pdf(driver, link, idx, download_dir):
                 )
 
                 # Wait for download to complete
-                max_wait_time = 120  # Increased wait time to 2 minutes
+                max_wait_time = 180  # Increased wait time to 3 minutes
                 start_time = time.time()
                 while time.time() - start_time < max_wait_time:
                     if os.path.exists(pdf_path):
@@ -103,22 +103,22 @@ def download_pdf(driver, link, idx, download_dir):
                             os.remove(pdf_path)  # Remove empty PDF file
                             logging.warning(f"Empty PDF file removed for link {idx}: {pdf_filename}")
                     
-                    if not os.path.exists(crdownload_path):
+                    if os.path.exists(crdownload_path):
+                        time.sleep(1)
+                    else:
                         time.sleep(2)  # Wait a bit more to ensure download is complete
                         break
-                    
-                    time.sleep(1)
 
                 # Final check and cleanup
                 if os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 0:
                     logging.info(f"Successfully downloaded PDF for link {idx}: {pdf_filename}")
                     return True
-                elif os.path.exists(crdownload_path):
-                    os.remove(crdownload_path)
-                    logging.warning(f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload")
-                
-                logging.warning(f"Failed to download PDF for link {idx}: {pdf_filename}")
-                return False
+                else:
+                    if os.path.exists(crdownload_path):
+                        os.remove(crdownload_path)
+                        logging.warning(f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload")
+                    logging.warning(f"Failed to download PDF for link {idx}: {pdf_filename}")
+                    return False
 
             except (TimeoutException, NoSuchElementException):
                 logging.warning(f"Selector {selector} not found for link {idx}")
@@ -128,6 +128,9 @@ def download_pdf(driver, link, idx, download_dir):
         return False
     except Exception as e:
         logging.error(f"Error downloading PDF for link {idx}: {str(e)}")
+        if os.path.exists(crdownload_path):
+            os.remove(crdownload_path)
+            logging.warning(f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload")
         return False
 
 
