@@ -15,6 +15,7 @@ from selenium.common.exceptions import (
 )
 from queue import Queue
 import concurrent.futures
+import threading
 
 # Set up logging
 logging.basicConfig(
@@ -29,8 +30,9 @@ chrome_driver_path = "c:/development/samples/pdfToMarkdown/chromedriver.exe"
 # Adjustable constant for the number of Chrome processes
 NUM_PROCESSES = 5
 
-# Initialize a queue for WebDriver instances
+# Initialize a queue for WebDriver instances and a lock for file operations
 driver_queue = Queue()
+file_lock = threading.Lock()
 
 
 def initialize_driver(download_dir):
@@ -71,10 +73,11 @@ def download_pdf(driver, link, idx, download_dir):
         pdf_path = os.path.join(download_dir, pdf_filename)
         crdownload_path = pdf_path + '.crdownload'
 
-        # Check if the file already exists
-        if os.path.exists(pdf_path):
-            logging.info(f"PDF already exists for link {idx}: {pdf_filename}")
-            return True
+        with file_lock:
+            # Check if the file already exists
+            if os.path.exists(pdf_path):
+                logging.info(f"PDF already exists for link {idx}: {pdf_filename}")
+                return True
 
         for selector in [
             "//button[@data-bi-name='download-pdf']",
@@ -95,30 +98,32 @@ def download_pdf(driver, link, idx, download_dir):
                 max_wait_time = 180  # Increased wait time to 3 minutes
                 start_time = time.time()
                 while time.time() - start_time < max_wait_time:
-                    if os.path.exists(pdf_path):
-                        if os.path.getsize(pdf_path) > 0:
-                            logging.info(f"Downloaded PDF for link {idx}: {pdf_filename}")
-                            return True
+                    with file_lock:
+                        if os.path.exists(pdf_path):
+                            if os.path.getsize(pdf_path) > 0:
+                                logging.info(f"Downloaded PDF for link {idx}: {pdf_filename}")
+                                return True
+                            else:
+                                os.remove(pdf_path)  # Remove empty PDF file
+                                logging.warning(f"Empty PDF file removed for link {idx}: {pdf_filename}")
+                        
+                        if os.path.exists(crdownload_path):
+                            time.sleep(1)
                         else:
-                            os.remove(pdf_path)  # Remove empty PDF file
-                            logging.warning(f"Empty PDF file removed for link {idx}: {pdf_filename}")
-                    
-                    if os.path.exists(crdownload_path):
-                        time.sleep(1)
-                    else:
-                        time.sleep(2)  # Wait a bit more to ensure download is complete
-                        break
+                            time.sleep(2)  # Wait a bit more to ensure download is complete
+                            break
 
                 # Final check and cleanup
-                if os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 0:
-                    logging.info(f"Successfully downloaded PDF for link {idx}: {pdf_filename}")
-                    return True
-                else:
-                    if os.path.exists(crdownload_path):
-                        os.remove(crdownload_path)
-                        logging.warning(f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload")
-                    logging.warning(f"Failed to download PDF for link {idx}: {pdf_filename}")
-                    return False
+                with file_lock:
+                    if os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 0:
+                        logging.info(f"Successfully downloaded PDF for link {idx}: {pdf_filename}")
+                        return True
+                    else:
+                        if os.path.exists(crdownload_path):
+                            os.remove(crdownload_path)
+                            logging.warning(f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload")
+                        logging.warning(f"Failed to download PDF for link {idx}: {pdf_filename}")
+                        return False
 
             except (TimeoutException, NoSuchElementException):
                 logging.warning(f"Selector {selector} not found for link {idx}")
@@ -128,9 +133,10 @@ def download_pdf(driver, link, idx, download_dir):
         return False
     except Exception as e:
         logging.error(f"Error downloading PDF for link {idx}: {str(e)}")
-        if os.path.exists(crdownload_path):
-            os.remove(crdownload_path)
-            logging.warning(f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload")
+        with file_lock:
+            if os.path.exists(crdownload_path):
+                os.remove(crdownload_path)
+                logging.warning(f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload")
         return False
 
 
