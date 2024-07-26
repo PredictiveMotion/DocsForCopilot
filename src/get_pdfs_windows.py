@@ -19,10 +19,15 @@ from selenium.common.exceptions import (
     WebDriverException,
 )
 
+print("Script started")
+
 # Ensure log directory exists
 log_dir = os.path.dirname("../logs/pdf_download.log")
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
+    print(f"Log directory created: {log_dir}")
+else:
+    print(f"Log directory already exists: {log_dir}")
 
 # Set up logging
 logging.basicConfig(
@@ -31,20 +36,25 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logging.getLogger().setLevel(logging.INFO)
+print("Logging set up")
 
 # Replace with your ChromeDriver path
 CHROME_DRIVER_PATH = "../chrome/chrome_windows/chromedriver.exe"
+print(f"ChromeDriver path: {CHROME_DRIVER_PATH}")
 
 # Adjustable constant for the number of Chrome processes
 NUM_PROCESSES = 5
+print(f"Number of processes: {NUM_PROCESSES}")
 
 # Initialize a queue for WebDriver instances and a lock for file operations
 driver_queue = Queue()
 file_lock = threading.Lock()
+print("Queue and lock initialized")
 
 
 def initialize_driver(download_dir):
     """Initialize and configure a Chrome WebDriver instance."""
+    print("Initializing WebDriver")
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
@@ -66,12 +76,18 @@ def initialize_driver(download_dir):
     service = Service(executable_path=CHROME_DRIVER_PATH)
 
     try:
+        print("Creating Chrome WebDriver instance")
         driver = webdriver.Chrome(service=service, options=options)
         driver.set_page_load_timeout(30)
         logging.info("WebDriver initialized successfully")
+        print("WebDriver initialized successfully")
         return driver
     except Exception as e:
-        logging.error(f"Failed to initialize WebDriver: {str(e)}")
+        error_message = f"Failed to initialize WebDriver: {str(e)}"
+        logging.error(error_message)
+        print(error_message)
+        print(f"ChromeDriver path: {CHROME_DRIVER_PATH}")
+        print(f"Chrome version: {webdriver.chrome.service.get_chrome_version()}")
         return None
 
 
@@ -177,10 +193,16 @@ def process_link(driver, link, idx, download_dir):
 
 def create_driver_pool(num_instances, download_dir):
     """Create a pool of WebDriver instances."""
-    for _ in range(num_instances):
+    print(f"Creating driver pool with {num_instances} instances")
+    for i in range(num_instances):
+        print(f"Initializing driver {i+1}/{num_instances}")
         driver = initialize_driver(download_dir)
         if driver:
             driver_queue.put(driver)
+            print(f"Driver {i+1} added to the pool")
+        else:
+            print(f"Failed to initialize driver {i+1}")
+    print(f"Driver pool created with {driver_queue.qsize()} instances")
 
 
 def process_link_with_own_driver(link_idx_tuple, download_dir):
@@ -253,7 +275,9 @@ def handle_permission_error(filename, attempt):
 
 def main():
     """Main function to orchestrate the PDF download process."""
+    print("Entering main function")
     args = parse_arguments()
+    print(f"Arguments parsed: {args}")
 
     if not args.download_dir or not args.links_file:
         print(
@@ -270,32 +294,52 @@ def main():
 
     download_dir = args.download_dir or "../data/downloaded_pdfs"
     links_file = args.links_file or "../data/framework452_links.txt"
+    print(f"Download directory: {download_dir}")
+    print(f"Links file: {links_file}")
 
     if not os.path.exists(download_dir):
         os.makedirs(download_dir)
+        print(f"Created download directory: {download_dir}")
 
+    print("Initializing WebDriver pool")
     create_driver_pool(NUM_PROCESSES, download_dir)  # Initialize the WebDriver pool
 
-    with open(links_file, "r", encoding="utf-8") as file:
-        links = [link.strip() for link in file.readlines() if link.strip()]
+    print("Reading links from file")
+    try:
+        with open(links_file, "r", encoding="utf-8") as file:
+            links = [link.strip() for link in file.readlines() if link.strip()]
+        print(f"Number of links read: {len(links)}")
+    except FileNotFoundError:
+        print(f"Error: Links file not found: {links_file}")
+        return
+    except Exception as e:
+        print(f"Error reading links file: {str(e)}")
+        return
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_PROCESSES) as executor:
-        list(
-            executor.map(
-                lambda x: process_link_with_own_driver(x, download_dir),
-                enumerate(links, start=1),
+    print("Starting download process")
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_PROCESSES) as executor:
+            list(
+                executor.map(
+                    lambda x: process_link_with_own_driver(x, download_dir),
+                    enumerate(links, start=1),
+                )
             )
-        )
+    except Exception as e:
+        print(f"Error during download process: {str(e)}")
 
+    print("Download process completed")
     logging.info("Download process completed.")
     rename_files_remove_splitted(download_dir)
     cleanup_crdownload_files(download_dir)
 
+    print("Cleaning up WebDriver instances")
     # Cleanup: Quit all WebDriver instances in the pool
     while not driver_queue.empty():
         driver = driver_queue.get()
         driver.quit()
 
+    print("Script execution completed")
 
 if __name__ == "__main__":
     main()
