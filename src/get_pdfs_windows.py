@@ -166,7 +166,7 @@ def process_link(driver, link, idx, download_dir):
     return False
 
 
-def create_driver_pool(num_instances, download_dir):
+def create_driver_pool(num_instances, download_dir, driver_queue):
     """Create a pool of WebDriver instances."""
     print(f"Creating driver pool with {num_instances} instances")
     for i in range(num_instances):
