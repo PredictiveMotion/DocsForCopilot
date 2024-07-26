@@ -4,52 +4,23 @@ import os
 import time
 import logging
 import argparse
-import threading
-from queue import Queue
 import concurrent.futures
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import (
-    TimeoutException,
-    NoSuchElementException,
-    WebDriverException,
-)
+from queue import Queue
+from config import CHROME_DRIVER_PATH, NUM_PROCESSES, LOG_FILE, DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
+from utils import setup_logging, create_directory, read_links_from_file
+from webdriver_utils import initialize_driver, create_driver_pool, cleanup_driver_pool
+from pdf_download import process_link_with_own_driver
+from file_operations import rename_files_remove_splitted, cleanup_crdownload_files
 
 print("Script started")
 
-# Ensure log directory exists
-log_dir = os.path.dirname("../logs/pdf_download.log")
-if not os.path.exists(log_dir):
-    os.makedirs(log_dir)
-    print(f"Log directory created: {log_dir}")
-else:
-    print(f"Log directory already exists: {log_dir}")
-
 # Set up logging
-logging.basicConfig(
-    filename="../logs/pdf_download.log",
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-)
-logging.getLogger().setLevel(logging.INFO)
+setup_logging(LOG_FILE)
 print("Logging set up")
 
-# Replace with your ChromeDriver path
-CHROME_DRIVER_PATH = "../chrome/chrome_windows/chromedriver.exe"
-print(f"ChromeDriver path: {CHROME_DRIVER_PATH}")
-
-# Adjustable constant for the number of Chrome processes
-NUM_PROCESSES = 5
-print(f"Number of processes: {NUM_PROCESSES}")
-
-# Initialize a queue for WebDriver instances and a lock for file operations
+# Initialize a queue for WebDriver instances
 driver_queue = Queue()
-file_lock = threading.Lock()
-print("Queue and lock initialized")
+print("Queue initialized")
 
 
 def initialize_driver(download_dir):
@@ -237,8 +208,8 @@ def rename_files_remove_splitted(download_dir):
 def parse_arguments():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Download PDFs from a list of links.")
-    parser.add_argument("--download_dir", help="Directory to save downloaded PDFs")
-    parser.add_argument("--links_file", help="File containing links to process")
+    parser.add_argument("--download_dir", help=f"Directory to save downloaded PDFs (default: {DEFAULT_DOWNLOAD_DIR})")
+    parser.add_argument("--links_file", help=f"File containing links to process (default: {DEFAULT_LINKS_FILE})")
     return parser.parse_args()
 
 
@@ -279,49 +250,27 @@ def main():
     args = parse_arguments()
     print(f"Arguments parsed: {args}")
 
-    if not args.download_dir or not args.links_file:
-        print(
-            "Usage: python get_pdfs_windows.py --download_dir <directory> --links_file <file>"
-        )
-        print("Options:")
-        print(
-            "  --download_dir  Directory to save downloaded PDFs (default: ../data/downloaded_pdfs)"
-        )
-        print(
-            "  --links_file    File containing links to process (default: ../data/framework452_links.txt)"
-        )
-        return
-
-    download_dir = args.download_dir or "../data/downloaded_pdfs"
-    links_file = args.links_file or "../data/framework452_links.txt"
+    download_dir = args.download_dir or DEFAULT_DOWNLOAD_DIR
+    links_file = args.links_file or DEFAULT_LINKS_FILE
     print(f"Download directory: {download_dir}")
     print(f"Links file: {links_file}")
 
-    if not os.path.exists(download_dir):
-        os.makedirs(download_dir)
-        print(f"Created download directory: {download_dir}")
+    create_directory(download_dir)
+    print(f"Ensured download directory exists: {download_dir}")
 
     print("Initializing WebDriver pool")
-    create_driver_pool(NUM_PROCESSES, download_dir)  # Initialize the WebDriver pool
+    create_driver_pool(NUM_PROCESSES, download_dir, driver_queue)
 
     print("Reading links from file")
-    try:
-        with open(links_file, "r", encoding="utf-8") as file:
-            links = [link.strip() for link in file.readlines() if link.strip()]
-        print(f"Number of links read: {len(links)}")
-    except FileNotFoundError:
-        print(f"Error: Links file not found: {links_file}")
-        return
-    except Exception as e:
-        print(f"Error reading links file: {str(e)}")
-        return
+    links = read_links_from_file(links_file)
+    print(f"Number of links read: {len(links)}")
 
     print("Starting download process")
     try:
         with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_PROCESSES) as executor:
             list(
                 executor.map(
-                    lambda x: process_link_with_own_driver(x, download_dir),
+                    lambda x: process_link_with_own_driver(x, download_dir, driver_queue),
                     enumerate(links, start=1),
                 )
             )
@@ -334,10 +283,7 @@ def main():
     cleanup_crdownload_files(download_dir)
 
     print("Cleaning up WebDriver instances")
-    # Cleanup: Quit all WebDriver instances in the pool
-    while not driver_queue.empty():
-        driver = driver_queue.get()
-        driver.quit()
+    cleanup_driver_pool(driver_queue)
 
     print("Script execution completed")
 
