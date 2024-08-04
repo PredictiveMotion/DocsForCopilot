@@ -9,7 +9,7 @@ from queue import Queue
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException, JavascriptException
 
 # Add the parent directory to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -21,6 +21,7 @@ from src.utils.webdriver_utils import create_driver_pool, cleanup_driver_pool
 from src.utils.link_operations import read_links_from_file
 from src.utils.logging_utils import setup_logging
 from src.pdf_download import process_link_with_own_driver
+from src.utils.argument_parser import parse_arguments
 from config import NUM_PROCESSES, LOG_FILE, DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
 
 print("Script started")
@@ -56,27 +57,35 @@ def click_pdf_button(driver, idx):
         "//a[contains(@href, '.pdf')]",
         "//button[contains(text(), 'Download PDF')]",
         "//a[contains(text(), 'Download PDF')]",
+        "//button[contains(@class, 'download-pdf-button')]",
+        "//a[contains(@class, 'download-pdf-link')]",
     ]
     for selector in selectors:
         try:
+            logging.info(f"Attempting to find PDF button for link {idx} using selector: {selector}")
             pdf_button = WebDriverWait(driver, 20).until(
                 EC.element_to_be_clickable((By.XPATH, selector))
             )
+            logging.info(f"PDF button found for link {idx} using selector: {selector}")
             pdf_button.click()
-            logging.info(f"PDF button found and clicked for link {idx} using selector: {selector}")
+            logging.info(f"PDF button clicked for link {idx}")
             return True
         except (TimeoutException, NoSuchElementException) as e:
             logging.warning(f"Selector {selector} not found for link {idx}: {str(e)}")
+    
+    # Log the page source for debugging
+    logging.debug(f"Page source for link {idx}:\n{driver.page_source}")
     return False
 
 def wait_for_download(pdf_path, crdownload_path, idx, pdf_filename):
     """Wait for the PDF download to complete."""
-    max_wait_time = 300  # 5 minutes
+    max_wait_time = 60  # 30 secs
     start_time = time.time()
     while time.time() - start_time < max_wait_time:
         if check_download_complete(pdf_path, idx, pdf_filename):
             return True
         if file_exists(crdownload_path):
+            logging.warning(f"Incomplete download file still exists for link {idx}: {pdf_filename}.crdownload , waiting...")
             time.sleep(2)
         else:
             time.sleep(5)
@@ -105,6 +114,18 @@ def cleanup_and_check(pdf_path, crdownload_path, idx, pdf_filename):
     logging.warning(f"Failed to download PDF for link {idx}: {pdf_filename}")
     return False
 
+def check_for_js_errors(driver):
+    """Check for JavaScript errors on the page."""
+    try:
+        logs = driver.get_log('browser')
+        for log in logs:
+            if log['level'] == 'SEVERE':
+                logging.warning(f"JavaScript error detected: {log['message']}")
+        return len([log for log in logs if log['level'] == 'SEVERE']) == 0
+    except Exception as e:
+        logging.error(f"Error checking for JavaScript errors: {str(e)}")
+        return True
+
 def process_link(driver, link, idx, download_dir):
     """Process a single link to download its PDF."""
     if not link.strip():
@@ -114,7 +135,10 @@ def process_link(driver, link, idx, download_dir):
     try:
         logging.info(f"Processing link {idx}: {link}")
         driver.get(link)
-        time.sleep(10)  # Wait for page to load
+        time.sleep(15)  # Increased wait time for page to load
+
+        if not check_for_js_errors(driver):
+            logging.warning(f"JavaScript errors detected for link {idx}")
 
         return download_pdf(driver, link, idx, download_dir)
     except WebDriverException as e:
@@ -124,12 +148,12 @@ def process_link(driver, link, idx, download_dir):
 
     return False
 
-def parse_arguments():
-    """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(description="Download PDFs from a list of links.")
-    parser.add_argument("--download_dir", help=f"Directory to save downloaded PDFs (default: {DEFAULT_DOWNLOAD_DIR})")
-    parser.add_argument("--links_file", help=f"File containing links to process (default: {DEFAULT_LINKS_FILE})")
-    return parser.parse_args()
+# def parse_arguments():
+#     """Parse command-line arguments."""
+#     parser = argparse.ArgumentParser(description="Download PDFs from a list of links.")
+#     parser.add_argument("--download_dir", help=f"Directory to save downloaded PDFs (default: {DEFAULT_DOWNLOAD_DIR})")
+#     parser.add_argument("--links_file", help=f"File containing links to process (default: {DEFAULT_LINKS_FILE})")
+#     return parser.parse_args()
 
 def main():
     """Main function to orchestrate the PDF download process."""
