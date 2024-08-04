@@ -6,7 +6,6 @@ import argparse
 import concurrent.futures
 import requests
 import json
-from queue import Queue
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -21,7 +20,7 @@ parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
 from src.utils.file_operations import rename_files_remove_splitted, cleanup_crdownload_files, file_exists, create_directory
-from src.utils.webdriver_utils import create_driver_pool, cleanup_driver_pool, initialize_driver
+from src.utils.webdriver_utils import initialize_driver
 from src.utils.link_operations import read_links_from_file
 from src.utils.logging_utils import setup_logging
 from src.pdf_download import process_link_with_own_driver
@@ -34,9 +33,6 @@ print("Script started")
 setup_logging(LOG_FILE)
 print("Logging set up")
 
-# Initialize a queue for WebDriver instances
-driver_queue = Queue()
-print("Queue initialized")
 
 
 
@@ -394,43 +390,29 @@ def main():
         print(f"Error: No write permission for download directory: {download_dir}")
         return
 
-    print("Initializing WebDriver pool")
-    create_driver_pool(num_processes, download_dir, driver_queue, initialize_driver)
+    print("Initializing WebDriver")
+    driver = initialize_driver(download_dir)
 
     print("Reading links from file")
     links = read_links_from_file(links_file)
     print(f"Number of links read: {len(links)}")
 
     print("Starting download process")
-    if parallel:
-        try:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=num_processes) as executor:
-                futures = [executor.submit(process_link_with_own_driver, (idx, link), download_dir, driver_queue) for idx, link in enumerate(links)]
-                for future in concurrent.futures.as_completed(futures):
-                    try:
-                        future.result()
-                    except Exception as e:
-                        logging.error(f"Error in thread: {str(e)}")
-        except Exception as e:
-            print(f"Error during parallel download process: {str(e)}")
-    else:
-        try:
-            for idx, link in enumerate(links):
-                driver = driver_queue.get()
-                success = download_pdf(driver, link, idx, download_dir)
-                driver_queue.put(driver)
-                if not success:
-                    logging.warning(f"Failed to download PDF for link {idx}: {link}")
-        except Exception as e:
-            logging.error(f"Error during serial download process: {str(e)}")
+    try:
+        for idx, link in enumerate(links):
+            success = download_pdf(driver, link, idx, download_dir)
+            if not success:
+                logging.warning(f"Failed to download PDF for link {idx}: {link}")
+    except Exception as e:
+        logging.error(f"Error during download process: {str(e)}")
 
     print("Download process completed")
     logging.info("Download process completed.")
     rename_files_remove_splitted(download_dir)
     cleanup_crdownload_files(download_dir)
 
-    print("Cleaning up WebDriver instances")
-    cleanup_driver_pool(driver_queue)
+    print("Cleaning up WebDriver instance")
+    driver.quit()
 
     print("Script execution completed")
 
