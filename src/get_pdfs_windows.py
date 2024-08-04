@@ -1,36 +1,27 @@
-# src/get_pdfs_windows.py
-
 """Script to download PDFs from Microsoft .NET API documentation using Selenium WebDriver."""
-
-import os
-import sys
-import time
 import logging
 import argparse
 import concurrent.futures
 from queue import Queue
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
+import sys
+import os
 
 # Add the parent directory to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
-from config import CHROME_DRIVER_PATH, NUM_PROCESSES, LOG_FILE, DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
-from src.utils.file_operations import file_exists
-from src.utils import create_directory, read_links_from_file, get_absolute_path, setup_logging
-from src.utils.webdriver_utils import initialize_driver, create_driver_pool, cleanup_driver_pool
+from src.utils.file_operations import rename_files_remove_splitted, cleanup_crdownload_files, file_exists
+from src.utils.webdriver_utils import create_driver_pool, cleanup_driver_pool
+from src.utils import create_directory, read_links_from_file, setup_logging
 from src.pdf_download import process_link_with_own_driver
-from src.utils.file_operations import rename_files_remove_splitted, cleanup_crdownload_files
+from config import NUM_PROCESSES, LOG_FILE, DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
 
 print("Script started")
-
 
 # Set up logging
 setup_logging(LOG_FILE)
@@ -39,6 +30,7 @@ print("Logging set up")
 # Initialize a queue for WebDriver instances
 driver_queue = Queue()
 print("Queue initialized")
+
 
 
 # def initialize_driver(download_dir):
