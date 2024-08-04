@@ -4,11 +4,7 @@ import os
 import logging
 from config import PROJECT_ROOT
 
-__all__ = ['setup_logging', 'file_exists', 'create_directory', 'read_links_from_file', 'get_absolute_path']
-
-def file_exists(file_path):
-    """Check if a file exists at the given path."""
-    return os.path.exists(file_path)
+__all__ = ['setup_logging', 'create_directory', 'read_links_from_file', 'get_absolute_path']
 
 def setup_logging(log_file):
     """Set up logging configuration."""
