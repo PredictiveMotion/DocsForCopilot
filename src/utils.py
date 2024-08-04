@@ -6,6 +6,16 @@ from config import PROJECT_ROOT
 
 __all__ = ['setup_logging', 'file_exists', 'create_directory', 'read_links_from_file', 'get_absolute_path']
 
+# Ensure these functions are defined in this file
+def create_directory(directory):
+    """Create a directory if it doesn't exist."""
+    os.makedirs(directory, exist_ok=True)
+
+def read_links_from_file(file_path):
+    """Read links from a file and return a list of non-empty links."""
+    with open(file_path, "r", encoding="utf-8") as file:
+        return [link.strip() for link in file.readlines() if link.strip()]
+
 def setup_logging(log_file):
     """Set up logging configuration."""
     print(f"Attempting to set up logging with log file: {log_file}")
