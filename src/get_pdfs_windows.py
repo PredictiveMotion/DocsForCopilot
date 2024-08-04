@@ -101,7 +101,6 @@ def download_pdf(driver, link, idx, download_dir):
                     logging.warning(f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload")
 
                 logging.warning(f"Failed to download PDF for link {idx}: {pdf_filename}")
-                logging.warning(f"Selector {selector} not found for link {idx}: {str(e)}")
                 # Capture the page source for debugging
                 page_source = driver.page_source
                 with open(f"debug_page_source_{idx}.html", "w", encoding="utf-8") as f:
