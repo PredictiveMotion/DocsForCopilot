@@ -26,7 +26,7 @@ from src.utils.link_operations import read_links_from_file
 from src.utils.logging_utils import setup_logging
 from src.pdf_download import process_link_with_own_driver
 from src.utils.argument_parser import parse_arguments
-from config import NUM_PROCESSES, LOG_FILE, DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
+from config import LOG_FILE, DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
 
 print("Script started")
 
@@ -362,8 +362,12 @@ def main():
 
     download_dir = args.download_dir or DEFAULT_DOWNLOAD_DIR
     links_file = args.links_file or DEFAULT_LINKS_FILE
+    parallel = args.parallel
+    num_processes = args.num_processes if parallel else 1
     print(f"Download directory: {download_dir}")
     print(f"Links file: {links_file}")
+    print(f"Parallel processing: {'Enabled' if parallel else 'Disabled'}")
+    print(f"Number of processes: {num_processes}")
 
     # Check if download directory exists and is writable
     if not os.path.exists(download_dir):
@@ -381,38 +385,34 @@ def main():
         return
 
     print("Initializing WebDriver pool")
-    #create_driver_pool(NUM_PROCESSES, download_dir, driver_queue, create_driver_with_network_logging)
-    create_driver_pool(NUM_PROCESSES, download_dir, driver_queue, initialize_driver)
-
-
+    create_driver_pool(num_processes, download_dir, driver_queue, initialize_driver)
 
     print("Reading links from file")
     links = read_links_from_file(links_file)
     print(f"Number of links read: {len(links)}")
 
-    # print("Starting download process")
-    # try:
-    #     with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_PROCESSES) as executor:
-    #         futures = [executor.submit(process_link_with_own_driver, (idx, link), download_dir, driver_queue) for idx, link in enumerate(links)]
-    #         for future in concurrent.futures.as_completed(futures):
-    #             try:
-    #                 future.result()
-    #             except Exception as e:
-    #                 logging.error(f"Error in thread: {str(e)}")
-    # except Exception as e:
-    #     print(f"Error during download process: {str(e)}")
-
     print("Starting download process")
-    try:
-        for idx, link in enumerate(links):
-            driver = driver_queue.get()
-            success = download_pdf(driver, link, idx, download_dir)
-            driver_queue.put(driver)
-            if not success:
-                logging.warning(f"Failed to download PDF for link {idx}: {link}")
-    except Exception as e:
-        logging.error(f"Error during download process: {str(e)}")
-
+    if parallel:
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=num_processes) as executor:
+                futures = [executor.submit(process_link_with_own_driver, (idx, link), download_dir, driver_queue) for idx, link in enumerate(links)]
+                for future in concurrent.futures.as_completed(futures):
+                    try:
+                        future.result()
+                    except Exception as e:
+                        logging.error(f"Error in thread: {str(e)}")
+        except Exception as e:
+            print(f"Error during parallel download process: {str(e)}")
+    else:
+        try:
+            for idx, link in enumerate(links):
+                driver = driver_queue.get()
+                success = download_pdf(driver, link, idx, download_dir)
+                driver_queue.put(driver)
+                if not success:
+                    logging.warning(f"Failed to download PDF for link {idx}: {link}")
+        except Exception as e:
+            logging.error(f"Error during serial download process: {str(e)}")
 
     print("Download process completed")
     logging.info("Download process completed.")
