@@ -19,6 +19,8 @@ def parse_arguments():
         default="pdfminer",
         help="Converter to use (default: pdfminer)",
     )
+    parser.add_argument("--download_dir", help="Directory to save downloaded PDFs")
+    parser.add_argument("--links_file", help="File containing links to process")
     return parser.parse_args()
 
 
