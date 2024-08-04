@@ -57,17 +57,29 @@ def download_pdf(driver, link, idx, download_dir):
         time.sleep(10)  # Wait for page to load
 
         if not click_pdf_button(driver, idx):
+            logging.info(f"click_pdf_button failed for link {idx}, attempting js_download")
             if not js_download(driver, idx):
                 logging.error(f"Failed to initiate download for link {idx}")
                 return False
+            else:
+                logging.info(f"js_download succeeded for link {idx}")
+        else:
+            logging.info(f"click_pdf_button succeeded for link {idx}")
 
-        return wait_for_download(driver, pdf_path, crdownload_path, idx, pdf_filename)
+        success = wait_for_download(driver, pdf_path, crdownload_path, idx, pdf_filename)
+        if success:
+            logging.info(f"Download completed successfully for link {idx}")
+        else:
+            logging.error(f"Download failed during wait_for_download for link {idx}")
+        return success
 
     except WebDriverException as e:
         logging.error(f"WebDriver error downloading PDF for link {idx}: {str(e)}")
+        capture_page_source(driver, idx)
         return False
     except Exception as e:
         logging.error(f"Unexpected error downloading PDF for link {idx}: {str(e)}")
+        capture_page_source(driver, idx)
         return False
 
 
@@ -215,8 +227,15 @@ def process_link(driver, link, idx, download_dir):
 
         # Check if PDF is available
         if not check_pdf_availability(driver, idx):
-            logging.warning(f"PDF not available for link {idx}")
-            return False
+            logging.warning(f"PDF not available for link {idx}, attempting direct download")
+            pdf_filename = link.split('/')[-1].split('?')[0] + '.pdf'
+            pdf_path = os.path.join(download_dir, pdf_filename)
+            if direct_download(link, pdf_path, idx):
+                logging.info(f"Direct download succeeded for link {idx}")
+                return True
+            else:
+                logging.error(f"Direct download failed for link {idx}")
+                return False
 
         return download_pdf(driver, link, idx, download_dir)
     except WebDriverException as e:
