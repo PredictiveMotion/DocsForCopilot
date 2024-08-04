@@ -105,10 +105,20 @@ def download_pdf(driver, link, idx, download_dir):
                     logging.warning(f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload")
 
                 logging.warning(f"Failed to download PDF for link {idx}: {pdf_filename}")
-                return False
-
-            except (TimeoutException, NoSuchElementException) as e:
                 logging.warning(f"Selector {selector} not found for link {idx}: {str(e)}")
+                # Capture the page source for debugging
+                page_source = driver.page_source
+                with open(f"debug_page_source_{idx}.html", "w", encoding="utf-8") as f:
+                    f.write(page_source)
+                continue
+
+            except TimeoutException as e:
+                logging.warning(f"TimeoutException occurred for link {idx}: {str(e)}")
+                continue
+
+            except NoSuchElementException as e:
+                logging.warning(f"Selector {selector} not found for link {idx}: {str(e)}")
+                #continue
                 # Capture the page source for debugging
                 page_source = driver.page_source
                 with open(f"debug_page_source_{idx}.html", "w", encoding="utf-8") as f:
@@ -125,39 +135,39 @@ def download_pdf(driver, link, idx, download_dir):
         return False
 
 
-def click_pdf_button(driver, idx):
-    """Attempt to click the PDF download button on the page."""
-    selectors = [
-        "//button[@data-bi-name='download-pdf']",
-        "//a[contains(@href, '.pdf')]",
-        "//button[contains(text(), 'Download PDF')]",
-        "//a[contains(text(), 'Download PDF')]",
-        "//button[contains(@class, 'download-pdf-button')]",
-        "//a[contains(@class, 'download-pdf-link')]",
-        "/html/body/div[2]/div/div/nav/div[2]/button",
-        "//*[@id='affixed-left-container']/div[2]/button",
-        "#affixed-left-container > div.padding-xxs.padding-none-tablet.border-top.border-bottom-tablet > button"
-    ]
-    for selector in selectors:
-        try:
-            logging.info(f"Attempting to find PDF button for link {idx} using selector: {selector}")
-            pdf_button = WebDriverWait(driver, 30).until(
-                EC.element_to_be_clickable((By.XPATH if selector.startswith("//") or selector.startswith("/html") else By.CSS_SELECTOR, selector))
-            )
-            logging.info(f"PDF button found for link {idx} using selector: {selector}")
-            driver.execute_script("arguments[0].click();", pdf_button)
-            logging.info(f"PDF button clicked for link {idx}")
-            return True
-        except TimeoutException as e:
-            logging.warning(f"TimeoutException occurred for link {idx}: {str(e)}")
-        except NoSuchElementException as e:
-            logging.warning(f"No such element found for link {idx}: {str(e)}")
-            logging.warning(f"Selector {selector} not found for link {idx}: {str(e)}")
-        except Exception as e:
-            logging.error(f"General Error clicking PDF button for link {idx}: {str(e)}")
+# def click_pdf_button(driver, idx):
+#     """Attempt to click the PDF download button on the page."""
+#     selectors = [
+#         "//button[@data-bi-name='download-pdf']",
+#         "//a[contains(@href, '.pdf')]",
+#         "//button[contains(text(), 'Download PDF')]",
+#         "//a[contains(text(), 'Download PDF')]",
+#         "//button[contains(@class, 'download-pdf-button')]",
+#         "//a[contains(@class, 'download-pdf-link')]",
+#         "/html/body/div[2]/div/div/nav/div[2]/button",
+#         "//*[@id='affixed-left-container']/div[2]/button",
+#         "#affixed-left-container > div.padding-xxs.padding-none-tablet.border-top.border-bottom-tablet > button"
+#     ]
+#     for selector in selectors:
+#         try:
+#             logging.info(f"Attempting to find PDF button for link {idx} using selector: {selector}")
+#             pdf_button = WebDriverWait(driver, 30).until(
+#                 EC.element_to_be_clickable((By.XPATH if selector.startswith("//") or selector.startswith("/html") else By.CSS_SELECTOR, selector))
+#             )
+#             logging.info(f"PDF button found for link {idx} using selector: {selector}")
+#             driver.execute_script("arguments[0].click();", pdf_button)
+#             logging.info(f"PDF button clicked for link {idx}")
+#             return True
+#         except TimeoutException as e:
+#             logging.warning(f"TimeoutException occurred for link {idx}: {str(e)}")
+#         except NoSuchElementException as e:
+#             logging.warning(f"No such element found for link {idx}: {str(e)}")
+#             logging.warning(f"Selector {selector} not found for link {idx}: {str(e)}")
+#         except Exception as e:
+#             logging.error(f"General Error clicking PDF button for link {idx}: {str(e)}")
     
-    logging.error(f"No PDF button found for link {idx}")
-    return False
+#     logging.error(f"No PDF button found for link {idx}")
+#     return False
 
 def js_download(driver, idx):
     """Attempt to trigger the PDF download using JavaScript."""
