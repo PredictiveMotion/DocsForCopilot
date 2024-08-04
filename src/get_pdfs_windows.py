@@ -155,7 +155,7 @@ def main():
     print("Starting download process")
     try:
         with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_PROCESSES) as executor:
-            futures = [executor.submit(process_link_with_own_driver, driver_queue, link, idx, download_dir) for idx, link in enumerate(links)]
+            futures = [executor.submit(process_link_with_own_driver, (idx, link), download_dir, driver_queue) for idx, link in enumerate(links)]
             for future in concurrent.futures.as_completed(futures):
                 try:
                     future.result()
