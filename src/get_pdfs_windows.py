@@ -95,25 +95,12 @@ def download_pdf(driver, link, idx, download_dir):
                 # Final check and cleanup
                 if os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 0:
                     logging.info(f"Successfully downloaded PDF for link {idx}: {pdf_filename}")
-                    return True
-                elif os.path.exists(crdownload_path):
-                    os.remove(crdownload_path)
-                    logging.warning(f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload")
-
-                logging.warning(f"Failed to download PDF for link {idx}: {pdf_filename}")
-                # Capture the page source for debugging
-                page_source = driver.page_source
-                with open(f"debug_page_source_{idx}.html", "w", encoding="utf-8") as f:
-                    f.write(page_source)
-                continue
-
             except TimeoutException as e:
                 logging.warning(f"TimeoutException occurred for link {idx}: {str(e)}")
                 continue
 
             except NoSuchElementException as e:
                 logging.warning(f"Selector {selector} not found for link {idx}: {str(e)}")
-                #continue
                 # Capture the page source for debugging
                 page_source = driver.page_source
                 with open(f"debug_page_source_{idx}.html", "w", encoding="utf-8") as f:
