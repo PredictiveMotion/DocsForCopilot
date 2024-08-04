@@ -4,10 +4,7 @@
 
 import os
 import sys
-import time
 import logging
-import argparse
-import concurrent.futures
 from queue import Queue
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -30,6 +27,7 @@ from src.pdf_download import process_link_with_own_driver
 from src.utils.file_operations import rename_files_remove_splitted, cleanup_crdownload_files
 
 print("Script started")
+
 
 # Set up logging
 setup_logging(LOG_FILE)
