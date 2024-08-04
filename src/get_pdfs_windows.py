@@ -1,3 +1,5 @@
+# src/get_pdfs_windows.py
+
 """Script to download PDFs from Microsoft .NET API documentation using Selenium WebDriver."""
 
 import os
