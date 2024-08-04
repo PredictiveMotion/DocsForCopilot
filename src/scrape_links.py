@@ -9,7 +9,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from config import CHROME_DRIVER_PATH
-from utils import get_absolute_path, create_directory
+from src.utils import get_absolute_path, create_directory
 
 def setup_driver():
     """Set up and return the Chrome WebDriver with custom options."""

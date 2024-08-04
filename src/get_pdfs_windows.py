@@ -14,10 +14,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
 from config import CHROME_DRIVER_PATH, NUM_PROCESSES, LOG_FILE, DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
-from utils import setup_logging, create_directory, read_links_from_file
-from webdriver_utils import initialize_driver, create_driver_pool, cleanup_driver_pool
-from pdf_download import process_link_with_own_driver
-from file_operations import rename_files_remove_splitted, cleanup_crdownload_files
+from src.utils import setup_logging, create_directory, read_links_from_file
+from src.utils.webdriver_utils import initialize_driver, create_driver_pool, cleanup_driver_pool
+from src.pdf_download import process_link_with_own_driver
+from src.utils.file_operations import rename_files_remove_splitted, cleanup_crdownload_files
 
 print("Script started")
 
