@@ -19,7 +19,8 @@ sys.path.insert(0, parent_dir)
 from src.utils.file_operations import rename_files_remove_splitted, cleanup_crdownload_files, file_exists
 from src.utils.webdriver_utils import create_driver_pool, cleanup_driver_pool
 from src.utils.file_operations import create_directory
-from src.utils import read_links_from_file, setup_logging
+from src.utils.link_operations import read_links_from_file
+from src.utils.logging_utils import setup_logging
 from src.pdf_download import process_link_with_own_driver
 from config import NUM_PROCESSES, LOG_FILE, DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
 
