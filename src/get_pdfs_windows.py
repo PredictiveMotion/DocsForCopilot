@@ -23,7 +23,8 @@ parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
 from config import CHROME_DRIVER_PATH, NUM_PROCESSES, LOG_FILE, DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
-from src.utils import file_exists, create_directory, read_links_from_file, get_absolute_path
+from src.utils.file_operations import file_exists
+from src.utils import create_directory, read_links_from_file, get_absolute_path
 from src.utils.webdriver_utils import initialize_driver, create_driver_pool, cleanup_driver_pool
 from src.pdf_download import process_link_with_own_driver
 from src.utils.file_operations import rename_files_remove_splitted, cleanup_crdownload_files
