@@ -1,6 +1,13 @@
 """Scrape links from Microsoft .NET API documentation using Selenium WebDriver."""
 
 import os
+import sys
+
+# Add the parent directory to sys.path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -9,7 +16,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from config import CHROME_DRIVER_PATH
-from src.utils import get_absolute_path, create_directory
+from src.utils.file_operations import create_directory
+from src.utils.path_operations import get_absolute_path
 
 def setup_driver():
     """Set up and return the Chrome WebDriver with custom options."""
