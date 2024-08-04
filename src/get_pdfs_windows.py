@@ -23,7 +23,7 @@ parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
 from config import CHROME_DRIVER_PATH, NUM_PROCESSES, LOG_FILE, DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
-from src.utils import file_exists, create_directory, read_links_from_file, get_absolute_path, setup_logging
+from src.utils import file_exists, create_directory, read_links_from_file, get_absolute_path
 from src.utils.webdriver_utils import initialize_driver, create_driver_pool, cleanup_driver_pool
 from src.pdf_download import process_link_with_own_driver
 from src.utils.file_operations import rename_files_remove_splitted, cleanup_crdownload_files
@@ -40,43 +40,43 @@ driver_queue = Queue()
 print("Queue initialized")
 
 
-def initialize_driver(download_dir):
-    """Initialize and configure a Chrome WebDriver instance."""
-    print("Initializing WebDriver")
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--window-size=1920,1080")
-    options.add_argument("--disable-web-security")
-    options.add_argument("--allow-running-insecure-content")
+# def initialize_driver(download_dir):
+#     """Initialize and configure a Chrome WebDriver instance."""
+#     print("Initializing WebDriver")
+#     options = Options()
+#     options.add_argument("--headless")
+#     options.add_argument("--no-sandbox")
+#     options.add_argument("--disable-dev-shm-usage")
+#     options.add_argument("--disable-gpu")
+#     options.add_argument("--window-size=1920,1080")
+#     options.add_argument("--disable-web-security")
+#     options.add_argument("--allow-running-insecure-content")
 
-    # Set up download preferences
-    prefs = {
-        "download.default_directory": os.path.abspath(download_dir),
-        "download.prompt_for_download": False,
-        "download.directory_upgrade": True,
-        "plugins.always_open_pdf_externally": True,
-    }
-    options.add_experimental_option("prefs", prefs)
+#     # Set up download preferences
+#     prefs = {
+#         "download.default_directory": os.path.abspath(download_dir),
+#         "download.prompt_for_download": False,
+#         "download.directory_upgrade": True,
+#         "plugins.always_open_pdf_externally": True,
+#     }
+#     options.add_experimental_option("prefs", prefs)
 
-    service = Service(executable_path=CHROME_DRIVER_PATH)
+#     service = Service(executable_path=CHROME_DRIVER_PATH)
 
-    try:
-        print("Creating Chrome WebDriver instance")
-        driver = webdriver.Chrome(service=service, options=options)
-        driver.set_page_load_timeout(30)
-        logging.info("WebDriver initialized successfully")
-        print("WebDriver initialized successfully")
-        return driver
-    except Exception as e:
-        error_message = f"Failed to initialize WebDriver: {str(e)}"
-        logging.error(error_message)
-        print(error_message)
-        print(f"ChromeDriver path: {CHROME_DRIVER_PATH}")
-        print(f"Chrome version: {webdriver.chrome.service.get_chrome_version()}")
-        return None
+#     try:
+#         print("Creating Chrome WebDriver instance")
+#         driver = webdriver.Chrome(service=service, options=options)
+#         driver.set_page_load_timeout(30)
+#         logging.info("WebDriver initialized successfully")
+#         print("WebDriver initialized successfully")
+#         return driver
+#     except Exception as e:
+#         error_message = f"Failed to initialize WebDriver: {str(e)}"
+#         logging.error(error_message)
+#         print(error_message)
+#         print(f"ChromeDriver path: {CHROME_DRIVER_PATH}")
+#         print(f"Chrome version: {webdriver.chrome.service.get_chrome_version()}")
+#         return None
 
 
 def download_pdf(driver, link, idx, download_dir):
@@ -95,9 +95,9 @@ def download_pdf(driver, link, idx, download_dir):
     logging.warning(f"No PDF button found for link {idx}. Skipping.")
     return False
 
-def file_exists(file_path):
-    """Check if a file exists at the given path."""
-    return os.path.exists(file_path)
+# def file_exists(file_path):
+#     """Check if a file exists at the given path."""
+#     return os.path.exists(file_path)
 
 def click_pdf_button(driver, idx):
     """Attempt to click the PDF download button on the page."""
@@ -176,18 +176,18 @@ def process_link(driver, link, idx, download_dir):
     return False
 
 
-def create_driver_pool(num_instances, download_dir, driver_queue):
-    """Create a pool of WebDriver instances."""
-    print(f"Creating driver pool with {num_instances} instances")
-    for i in range(num_instances):
-        print(f"Initializing driver {i+1}/{num_instances}")
-        driver = initialize_driver(download_dir)
-        if driver:
-            driver_queue.put(driver)
-            print(f"Driver {i+1} added to the pool")
-        else:
-            print(f"Failed to initialize driver {i+1}")
-    print(f"Driver pool created with {driver_queue.qsize()} instances")
+# def create_driver_pool(num_instances, download_dir, driver_queue):
+#     """Create a pool of WebDriver instances."""
+#     print(f"Creating driver pool with {num_instances} instances")
+#     for i in range(num_instances):
+#         print(f"Initializing driver {i+1}/{num_instances}")
+#         driver = initialize_driver(download_dir)
+#         if driver:
+#             driver_queue.put(driver)
+#             print(f"Driver {i+1} added to the pool")
+#         else:
+#             print(f"Failed to initialize driver {i+1}")
+#     print(f"Driver pool created with {driver_queue.qsize()} instances")
 
 
 def process_link_with_own_driver(link_idx_tuple, download_dir, driver_queue):
