@@ -7,7 +7,7 @@ sys.path.insert(0, project_root)
 
 from converters.pdf_to_markdown_pdfminer import pdf_to_markdown_pdfminer
 from converters.pdf_to_markdown_markdownify import pdf_to_markdown_markdownify
-from utils.argument_parser import parse_arguments, process_arguments
+from src.utils.argument_parser import parse_arguments, process_arguments
 
 def pdf_to_markdown(input_pdf_path, output_markdown_path, converter="pdfminer"):
     try:
