@@ -18,6 +18,7 @@ from utils.file_operations import (
 from utils.link_operations import read_links_from_file
 from utils.argument_parser import parse_arguments
 from .config import DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
+from .utils.configure_paths import get_config_settings
 
 
 def initialize_driver(download_dir, headless=False):
@@ -150,7 +151,10 @@ def main():
     args = parse_arguments()
     print(f"Arguments parsed: {args}")
 
-    download_dir = args.download_dir or DEFAULT_DOWNLOAD_DIR
+    # Read settings from config.ini
+    input_folder, output_folder, converter = get_config_settings("config.ini")
+
+    download_dir = args.download_dir or output_folder or DEFAULT_DOWNLOAD_DIR
     links_file = args.links_file or DEFAULT_LINKS_FILE
     parallel = args.parallel
     num_processes = args.num_processes if parallel else 1
@@ -158,6 +162,7 @@ def main():
     print(f"Links file: {links_file}")
     print(f"Parallel processing: {'Enabled' if parallel else 'Disabled'}")
     print(f"Number of processes: {num_processes}")
+    print(f"Converter: {converter}")
 
     # Check if download directory exists and is writable
     if not os.path.exists(download_dir):
