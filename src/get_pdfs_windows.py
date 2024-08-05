@@ -11,14 +11,20 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 
+import os
+import sys
+
+# Add the current directory to sys.path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from utils.file_operations import (
     rename_files_remove_splitted,
     cleanup_crdownload_files,
 )
 from utils.link_operations import read_links_from_file
 from utils.argument_parser import parse_arguments
-from .config import DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
-from .utils.configure_paths import get_config_settings
+from config import DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
+from utils.configure_paths import get_config_settings
 
 
 def initialize_driver(download_dir, headless=False):

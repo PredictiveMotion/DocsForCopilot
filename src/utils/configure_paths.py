@@ -1,4 +1,10 @@
-from ..config_management import read_config
+import os
+import sys
+
+# Add the parent directory to sys.path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from config_management import read_config
 
 def get_config_settings(config_file):
     config = read_config(config_file)

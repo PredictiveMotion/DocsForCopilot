@@ -3,7 +3,7 @@ import argparse
 import os
 import sys
 
-from .configure_paths import get_config_settings
+from configure_paths import get_config_settings
 
 
 def parse_arguments():
