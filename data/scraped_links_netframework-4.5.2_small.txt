@@ -1,9 +1,0 @@
-https://learn.microsoft.com/en-us/dotnet/api/system.codedom?view=netframework-4.5.2
-https://learn.microsoft.com/en-us/dotnet/api/system.codedom.compiler?view=netframework-4.5.2
-https://learn.microsoft.com/en-us/dotnet/api/system.collections?view=netframework-4.5.2
-https://learn.microsoft.com/en-us/dotnet/api/system.collections.concurrent?view=netframework-4.5.2
-https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic?view=netframework-4.5.2
-https://learn.microsoft.com/en-us/dotnet/api/system.collections.objectmodel?view=netframework-4.5.2
-https://learn.microsoft.com/en-us/dotnet/api/system.collections.specialized?view=netframework-4.5.2
-https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel?view=netframework-4.5.2
-https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.composition?view=netframework-4.5.2
