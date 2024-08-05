@@ -1,7 +1,5 @@
-import sys
 import os
 import logging
-import argparse
 import requests
 from urllib.parse import urlparse
 from selenium import webdriver
@@ -13,19 +11,13 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 
-# Add the parent directory to sys.path
-current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir)
-
 from src.utils.file_operations import (
     rename_files_remove_splitted,
     cleanup_crdownload_files,
 )
 from src.utils.link_operations import read_links_from_file
-from src.utils.logging_utils import setup_logging
 from src.utils.argument_parser import parse_arguments
-from config import LOG_FILE, DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
+from config import DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
 
 
 def initialize_driver(download_dir, headless=False):
