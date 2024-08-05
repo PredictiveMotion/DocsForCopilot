@@ -17,7 +17,7 @@ from utils.file_operations import (
 )
 from utils.link_operations import read_links_from_file
 from utils.argument_parser import parse_arguments
-from config import DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
+from .config import DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
 
 
 def initialize_driver(download_dir, headless=False):
