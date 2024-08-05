@@ -11,13 +11,13 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 
-from src.utils.file_operations import (
+from utils.file_operations import (
     rename_files_remove_splitted,
     cleanup_crdownload_files,
 )
-from src.utils.link_operations import read_links_from_file
-from src.utils.argument_parser import parse_arguments
-from config import DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
+from utils.link_operations import read_links_from_file
+from utils.argument_parser import parse_arguments
+from ..config import DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
 
 
 def initialize_driver(download_dir, headless=False):
