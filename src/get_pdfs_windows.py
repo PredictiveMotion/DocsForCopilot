@@ -51,6 +51,17 @@ def download_pdf(driver, link, idx, download_dir):
             logging.info(f"PDF already exists for link {idx}: {pdf_filename}")
             return True
 
+        # Navigate to the URL
+        logging.info(f"Navigating to URL: {link}")
+        driver.get(link)
+
+        # Wait for the page to load
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+
+        # Log the current URL to verify navigation
+        current_url = driver.current_url
+        logging.info(f"Current URL after navigation: {current_url}")
+
         selectors = [
             "//button[@data-bi-name='download-pdf']",
             "//a[contains(@href, '.pdf')]",
@@ -117,39 +128,19 @@ def download_pdf(driver, link, idx, download_dir):
         return False
 
 
-# def click_pdf_button(driver, idx):
-#     """Attempt to click the PDF download button on the page."""
-#     selectors = [
-#         "//button[@data-bi-name='download-pdf']",
-#         "//a[contains(@href, '.pdf')]",
-#         "//button[contains(text(), 'Download PDF')]",
-#         "//a[contains(text(), 'Download PDF')]",
-#         "//button[contains(@class, 'download-pdf-button')]",
-#         "//a[contains(@class, 'download-pdf-link')]",
-#         "/html/body/div[2]/div/div/nav/div[2]/button",
-#         "//*[@id='affixed-left-container']/div[2]/button",
-#         "#affixed-left-container > div.padding-xxs.padding-none-tablet.border-top.border-bottom-tablet > button"
-#     ]
-#     for selector in selectors:
-#         try:
-#             logging.info(f"Attempting to find PDF button for link {idx} using selector: {selector}")
-#             pdf_button = WebDriverWait(driver, 30).until(
-#                 EC.element_to_be_clickable((By.XPATH if selector.startswith("//") or selector.startswith("/html") else By.CSS_SELECTOR, selector))
-#             )
-#             logging.info(f"PDF button found for link {idx} using selector: {selector}")
-#             driver.execute_script("arguments[0].click();", pdf_button)
-#             logging.info(f"PDF button clicked for link {idx}")
-#             return True
-#         except TimeoutException as e:
-#             logging.warning(f"TimeoutException occurred for link {idx}: {str(e)}")
-#         except NoSuchElementException as e:
-#             logging.warning(f"No such element found for link {idx}: {str(e)}")
-#             logging.warning(f"Selector {selector} not found for link {idx}: {str(e)}")
-#         except Exception as e:
-#             logging.error(f"General Error clicking PDF button for link {idx}: {str(e)}")
-    
-#     logging.error(f"No PDF button found for link {idx}")
-#     return False
+def cleanup_and_check(pdf_path, crdownload_path, idx, pdf_filename):
+    """Perform final cleanup and check if the download was successful."""
+    if os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 0:
+        logging.info(f"Successfully downloaded PDF for link {idx}: {pdf_filename}")
+        return True
+    if os.path.exists(crdownload_path):
+        os.remove(crdownload_path)
+        logging.warning(f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload")
+    logging.warning(f"Failed to download PDF for link {idx}: {pdf_filename}")
+    return False
+
+
+
 
 def js_download(driver, idx):
     """Attempt to trigger the PDF download using JavaScript."""
@@ -172,32 +163,23 @@ def js_download(driver, idx):
     except JavascriptException as e:
         logging.error(f"JavaScript error during download attempt for link {idx}: {str(e)}")
         return False
-
+    
+  
 def wait_for_download(driver, pdf_path, crdownload_path, idx, pdf_filename):
     """Wait for the PDF download to complete."""
     max_wait_time = 180  # 3 minutes
     start_time = time.time()
     while time.time() - start_time < max_wait_time:
-        try:
-            if check_download_complete(pdf_path, idx, pdf_filename):
-                return True
-            if file_exists(crdownload_path):
-                logging.info(f"Incomplete download file exists for link {idx}: {pdf_filename}.crdownload, waiting...")
-                time.sleep(5)
-            else:
-                logging.info(f"No download file found for link {idx}: {pdf_filename}, waiting...")
-                time.sleep(10)
-                if not file_exists(pdf_path) and not file_exists(crdownload_path):
-                    logging.warning(f"No download started for link {idx} after {time.time() - start_time:.2f} seconds")
-                    analyze_network_traffic(driver, idx)
-                    return False
-        except UnexpectedAlertPresentException:
-            logging.warning(f"Unexpected alert present for link {idx}. Attempting to close.")
-            try:
-                alert = driver.switch_to.alert
-                alert.dismiss()
-            except:
-                pass
+        if check_download_complete(pdf_path, idx, pdf_filename):
+            return True
+        if os.path.exists(crdownload_path):
+            time.sleep(5)
+        else:
+            time.sleep(10)
+            if not os.path.exists(pdf_path) and not os.path.exists(crdownload_path):
+                logging.warning(f"No download started for link {idx} after {time.time() - start_time:.2f} seconds")
+                analyze_network_traffic(driver, idx)
+                return False
     logging.warning(f"Download timed out for link {idx}: {pdf_filename}")
     return cleanup_and_check(pdf_path, crdownload_path, idx, pdf_filename)
 
@@ -212,16 +194,7 @@ def check_download_complete(pdf_path, idx, pdf_filename):
             logging.warning(f"Empty PDF file removed for link {idx}: {pdf_filename}")
     return False
 
-def cleanup_and_check(pdf_path, crdownload_path, idx, pdf_filename):
-    """Perform final cleanup and check if the download was successful."""
-    if os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 0:
-        logging.info(f"Successfully downloaded PDF for link {idx}: {pdf_filename}")
-        return True
-    if os.path.exists(crdownload_path):
-        os.remove(crdownload_path)
-        logging.warning(f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload")
-    logging.warning(f"Failed to download PDF for link {idx}: {pdf_filename}")
-    return False
+
 
 def check_for_js_errors(driver):
     """Check for JavaScript errors on the page."""
@@ -249,42 +222,6 @@ def direct_download(url, pdf_path, idx):
         logging.error(f"Direct download failed for link {idx}: {str(e)}")
         return False
 
-def process_link(driver, link, idx, download_dir):
-    """Process a single link to download its PDF."""
-    if not link.strip():
-        logging.warning(f"Skipping empty link at index {idx}")
-        return False
-
-    try:
-        logging.info(f"Processing link {idx}: {link}")
-        driver.get(link)
-        time.sleep(20)  # Wait for page to load
-
-        if not check_for_js_errors(driver):
-            logging.warning(f"JavaScript errors detected for link {idx}")
-
-        # Check if PDF is available
-        if not check_pdf_availability(driver, idx):
-            logging.warning(f"PDF not available for link {idx}, attempting direct download")
-            pdf_filename = link.split('/')[-1].split('?')[0] + '.pdf'
-            pdf_path = os.path.join(download_dir, pdf_filename)
-            if direct_download(link, pdf_path, idx):
-                logging.info(f"Direct download succeeded for link {idx}")
-                return True
-            else:
-                logging.error(f"Direct download failed for link {idx}")
-                return False
-
-        return download_pdf(driver, link, idx, download_dir)
-    except WebDriverException as e:
-        logging.error(f"WebDriver error processing link {idx}: {str(e)}")
-        driver = reinitialize_driver(download_dir)
-        if driver is not None:
-            return process_link(driver, link, idx, download_dir)
-    except Exception as e:
-        logging.error(f"Unexpected error processing link {idx}: {str(e)}")
-
-    return False
 
 def check_pdf_availability(driver, idx):
     """Check if the PDF is available on the page."""
@@ -298,29 +235,6 @@ def check_pdf_availability(driver, idx):
         logging.warning(f"PDF button not found for link {idx}")
         return False
 
-def create_driver_with_network_logging(download_dir):
-    """Create a WebDriver instance with network logging enabled."""
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--disable-gpu')
-    options.add_experimental_option('prefs', {
-        'download.default_directory': download_dir,
-        'download.prompt_for_download': False,
-        'download.directory_upgrade': True,
-        'safebrowsing.enabled': False
-    })
-    options.set_capability('goog:loggingPrefs', {'performance': 'ALL', 'browser': 'ALL'})
-    
-    service = Service(ChromeDriverManager().install())
-    return webdriver.Chrome(service=service, options=options)
-
-def reinitialize_driver(download_dir):
-    """Reinitialize the WebDriver after a crash."""
-    try:
-        return create_driver_with_network_logging(download_dir)
-    except Exception as e:
-        logging.error(f"Failed to reinitialize WebDriver: {str(e)}")
-        return None
 
 def analyze_network_traffic(driver, idx):
     """Analyze network traffic for PDF download requests."""
@@ -404,80 +318,7 @@ def main():
 
 if __name__ == "__main__":
     main()
-def js_download(driver, idx):
-    """Attempt to trigger the PDF download using JavaScript."""
-    try:
-        script = """
-        var links = document.querySelectorAll('a[href*=".pdf"], button[data-bi-name="download-pdf"]');
-        if (links.length > 0) {
-            links[0].click();
-            return true;
-        }
-        return false;
-        """
-        result = driver.execute_script(script)
-        if result:
-            logging.info(f"JavaScript-based download triggered for link {idx}")
-            return True
-        else:
-            logging.warning(f"No suitable element found for JavaScript-based download for link {idx}")
-            return False
-    except JavascriptException as e:
-        logging.error(f"JavaScript error during download attempt for link {idx}: {str(e)}")
-        return False
 
-def wait_for_download(driver, pdf_path, crdownload_path, idx, pdf_filename):
-    """Wait for the PDF download to complete."""
-    max_wait_time = 180  # 3 minutes
-    start_time = time.time()
-    while time.time() - start_time < max_wait_time:
-        if check_download_complete(pdf_path, idx, pdf_filename):
-            return True
-        if os.path.exists(crdownload_path):
-            time.sleep(5)
-        else:
-            time.sleep(10)
-            if not os.path.exists(pdf_path) and not os.path.exists(crdownload_path):
-                logging.warning(f"No download started for link {idx} after {time.time() - start_time:.2f} seconds")
-                analyze_network_traffic(driver, idx)
-                return False
-    logging.warning(f"Download timed out for link {idx}: {pdf_filename}")
-    return cleanup_and_check(pdf_path, crdownload_path, idx, pdf_filename)
 
-def check_download_complete(pdf_path, idx, pdf_filename):
-    """Check if the PDF download has completed successfully."""
-    if os.path.exists(pdf_path):
-        if os.path.getsize(pdf_path) > 0:
-            logging.info(f"Downloaded PDF for link {idx}: {pdf_filename}")
-            return True
-        else:
-            os.remove(pdf_path)
-            logging.warning(f"Empty PDF file removed for link {idx}: {pdf_filename}")
-    return False
 
-def cleanup_and_check(pdf_path, crdownload_path, idx, pdf_filename):
-    """Perform final cleanup and check if the download was successful."""
-    if os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 0:
-        logging.info(f"Successfully downloaded PDF for link {idx}: {pdf_filename}")
-        return True
-    if os.path.exists(crdownload_path):
-        os.remove(crdownload_path)
-        logging.warning(f"Removed incomplete download file for link {idx}: {pdf_filename}.crdownload")
-    logging.warning(f"Failed to download PDF for link {idx}: {pdf_filename}")
-    return False
 
-def analyze_network_traffic(driver, idx):
-    """Analyze network traffic for PDF download requests."""
-    try:
-        logs = driver.get_log('performance')
-        for entry in logs:
-            log = json.loads(entry['message'])['message']
-            if 'Network.responseReceived' in log['method'] or 'Network.requestWillBeSent' in log['method']:
-                url = log['params'].get('response', {}).get('url') or log['params'].get('request', {}).get('url')
-                if url and url.endswith('.pdf'):
-                    logging.info(f"PDF-related network activity detected for link {idx}: {url}")
-                    return True
-        logging.warning(f"No PDF-related network activity detected for link {idx}")
-    except Exception as e:
-        logging.error(f"Error analyzing network traffic for link {idx}: {str(e)}")
-    return False
