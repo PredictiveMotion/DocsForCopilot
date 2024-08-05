@@ -26,7 +26,7 @@ from selenium.webdriver.chrome.options import Options
 def initialize_driver(download_dir, headless=False):
     chrome_options = Options()
     if headless:
-        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--disable-software-rasterizer")
     chrome_options.add_argument("--disable-dev-shm-usage")
@@ -41,7 +41,8 @@ def initialize_driver(download_dir, headless=False):
     chrome_options.add_argument("--disable-features=IsolateOrigins,site-per-process")
     chrome_options.add_argument("--disable-safe-browsing")
     chrome_options.add_argument("--remote-debugging-port=9222")
-    chrome_options.add_argument("--window-size=1920,1080")    
+    chrome_options.add_argument("--window-size=1920,1080")
+    chrome_options.add_argument("--enable-javascript")
     chrome_options.add_experimental_option("prefs", {
         "download.default_directory": download_dir,
         "download.prompt_for_download": False,
@@ -72,7 +73,7 @@ def download_pdf(driver, link, idx, download_dir):
         parsed_url = urlparse(link)
         pdf_filename = parsed_url.path.split('/')[-1]
         if not pdf_filename:
-            pdf_filename = 'default'
+            pdf_filename = f'default_{idx}'
         pdf_filename += '.pdf'
         pdf_path = os.path.join(download_dir, pdf_filename)
 
@@ -100,20 +101,11 @@ def download_pdf(driver, link, idx, download_dir):
             pdf_button = WebDriverWait(driver, 20).until(
                 EC.element_to_be_clickable((By.XPATH, "//button[@data-bi-name='download-pdf']"))
             )
-            pdf_button.click()
+            driver.execute_script("arguments[0].click();", pdf_button)
             logging.info(f"PDF button clicked for link {idx}")
-        except TimeoutException:
-            logging.warning(f"PDF button not found for link {idx}. The page might not have a PDF version.")
-            return False
         except Exception as e:
             logging.error(f"Failed to click PDF button for link {idx}: {str(e)}")
-            # Fallback to JavaScript click
-            try:
-                driver.execute_script("arguments[0].click();", pdf_button)
-                logging.info(f"PDF button clicked using JavaScript for link {idx}")
-            except Exception as js_e:
-                logging.error(f"Failed to click PDF button using JavaScript for link {idx}: {str(js_e)}")
-                return False
+            return False
 
         # Wait for the PDF URL to appear in the browser's address bar
         def pdf_url_present(driver):
@@ -123,7 +115,15 @@ def download_pdf(driver, link, idx, download_dir):
             WebDriverWait(driver, 20).until(pdf_url_present)
         except TimeoutException:
             logging.error(f"PDF URL not found in address bar for link {idx}")
-            return False
+            # Attempt to get PDF URL from JavaScript
+            try:
+                pdf_url = driver.execute_script("return window.location.href;")
+                if "pdf?url=" not in pdf_url:
+                    logging.error(f"PDF URL not found in JavaScript for link {idx}")
+                    return False
+            except JavascriptException:
+                logging.error(f"Failed to get PDF URL from JavaScript for link {idx}")
+                return False
 
         # Extract the PDF URL
         pdf_url = driver.current_url
@@ -179,7 +179,7 @@ def main():
         return
 
     print("Initializing WebDriver")
-    driver = initialize_driver(download_dir, headless=False)  # Set headless to False
+    driver = initialize_driver(download_dir, headless=True)  # Set headless to True
 
     print("Reading links from file")
     links = read_links_from_file(links_file)
