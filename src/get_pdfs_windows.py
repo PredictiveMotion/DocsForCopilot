@@ -1,27 +1,32 @@
 import sys
 import os
-import time
 import logging
 import argparse
-import concurrent.futures
 import requests
-import json
 from urllib.parse import urlparse
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException, JavascriptException, UnexpectedAlertPresentException
+from selenium.common.exceptions import TimeoutException, JavascriptException
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
 
 # Add the parent directory to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
-from src.utils.file_operations import rename_files_remove_splitted, cleanup_crdownload_files, file_exists, create_directory
-from selenium.webdriver.chrome.options import Options
+from src.utils.file_operations import (
+    rename_files_remove_splitted,
+    cleanup_crdownload_files,
+)
+from src.utils.link_operations import read_links_from_file
+from src.utils.logging_utils import setup_logging
+from src.utils.argument_parser import parse_arguments
+from config import LOG_FILE, DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
+
 
 def initialize_driver(download_dir, headless=False):
     chrome_options = Options()
@@ -43,38 +48,32 @@ def initialize_driver(download_dir, headless=False):
     chrome_options.add_argument("--remote-debugging-port=9222")
     chrome_options.add_argument("--window-size=1920,1080")
     chrome_options.add_argument("--enable-javascript")
-    chrome_options.add_experimental_option("prefs", {
-        "download.default_directory": download_dir,
-        "download.prompt_for_download": False,
-        "download.directory_upgrade": True,
-        "safebrowsing.enabled": False,
-        "profile.default_content_setting_values.automatic_downloads": 1,
-        "profile.default_content_setting_values.notifications": 2,
-    })
+    chrome_options.add_experimental_option(
+        "prefs",
+        {
+            "download.default_directory": download_dir,
+            "download.prompt_for_download": False,
+            "download.directory_upgrade": True,
+            "safebrowsing.enabled": False,
+            "profile.default_content_setting_values.automatic_downloads": 1,
+            "profile.default_content_setting_values.notifications": 2,
+        },
+    )
 
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+    driver = webdriver.Chrome(
+        service=Service(ChromeDriverManager().install()), options=chrome_options
+    )
     return driver
 
-from src.utils.link_operations import read_links_from_file
-from src.utils.logging_utils import setup_logging
-from src.pdf_download import process_link_with_own_driver
-from src.utils.argument_parser import parse_arguments
-from config import LOG_FILE, DEFAULT_DOWNLOAD_DIR, DEFAULT_LINKS_FILE
-
-print("Script started")
-
-# Set up logging
-setup_logging(LOG_FILE)
-print("Logging set up")
 
 def download_pdf(driver, link, idx, download_dir):
     try:
         # Extract the PDF filename from the link
         parsed_url = urlparse(link)
-        pdf_filename = parsed_url.path.split('/')[-1]
+        pdf_filename = parsed_url.path.split("/")[-1]
         if not pdf_filename:
-            pdf_filename = f'default_{idx}'
-        pdf_filename += '.pdf'
+            pdf_filename = f"default_{idx}"
+        pdf_filename += ".pdf"
         pdf_path = os.path.join(download_dir, pdf_filename)
 
         logging.info(f"Processing link {idx}: {link}")
@@ -90,7 +89,9 @@ def download_pdf(driver, link, idx, download_dir):
         driver.get(link)
 
         # Wait for the page to load
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+        WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.TAG_NAME, "body"))
+        )
 
         # Log the current URL to verify navigation
         current_url = driver.current_url
@@ -99,7 +100,9 @@ def download_pdf(driver, link, idx, download_dir):
         # Find and click the PDF download button
         try:
             pdf_button = WebDriverWait(driver, 20).until(
-                EC.element_to_be_clickable((By.XPATH, "//button[@data-bi-name='download-pdf']"))
+                EC.element_to_be_clickable(
+                    (By.XPATH, "//button[@data-bi-name='download-pdf']")
+                )
             )
             driver.execute_script("arguments[0].click();", pdf_button)
             logging.info(f"PDF button clicked for link {idx}")
@@ -133,7 +136,7 @@ def download_pdf(driver, link, idx, download_dir):
         response = requests.get(pdf_url, stream=True, timeout=30)
         response.raise_for_status()
 
-        with open(pdf_path, 'wb') as file:
+        with open(pdf_path, "wb") as file:
             for chunk in response.iter_content(chunk_size=8192):
                 file.write(chunk)
 
@@ -147,6 +150,7 @@ def download_pdf(driver, link, idx, download_dir):
     except Exception as e:
         logging.error(f"Error downloading PDF for link {idx}: {str(e)}")
         return False
+
 
 def main():
     """Main function to orchestrate the PDF download process."""
@@ -203,6 +207,7 @@ def main():
     driver.quit()
 
     print("Script execution completed")
+
 
 if __name__ == "__main__":
     main()
