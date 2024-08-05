@@ -1,4 +1,4 @@
-from config_management import read_config
+from ..config_management import read_config
 
 def get_config_settings(config_file):
     config = read_config(config_file)
