@@ -8,18 +8,46 @@ from yaml.parser import ParserError
 from markdown.extensions.fenced_code import FencedCodeExtension
 
 def process_blockquotes(soup):
+    """
+    Process blockquotes in the BeautifulSoup object and convert them to Markdown format.
+
+    Args:
+        soup (BeautifulSoup): The BeautifulSoup object containing the parsed HTML.
+
+    Returns:
+        str: A string containing the processed blockquotes in Markdown format.
+    """
     blockquote_md = ""
     for blockquote in soup.find_all("blockquote"):
         blockquote_md += "> " + blockquote.text.strip().replace("\n", "\n> ") + "\n\n"
     return blockquote_md
 
 def process_horizontal_rules(soup):
+    """
+    Process horizontal rules in the BeautifulSoup object and convert them to Markdown format.
+
+    Args:
+        soup (BeautifulSoup): The BeautifulSoup object containing the parsed HTML.
+
+    Returns:
+        str: A string containing the processed horizontal rules in Markdown format.
+    """
     hr_md = ""
     for hr in soup.find_all("hr"):
         hr_md += "---\n\n"
     return hr_md
 
 def process_nested_lists(ul_or_ol, indent=""):
+    """
+    Process nested lists in the BeautifulSoup object and convert them to Markdown format.
+
+    Args:
+        ul_or_ol (Tag): The BeautifulSoup Tag object representing an unordered or ordered list.
+        indent (str, optional): The current indentation level. Defaults to "".
+
+    Returns:
+        str: A string containing the processed nested lists in Markdown format.
+    """
     list_md = ""
     for li in ul_or_ol.find_all("li", recursive=False):
         if ul_or_ol.name == "ul":
@@ -36,6 +64,15 @@ def process_nested_lists(ul_or_ol, indent=""):
     return list_md
 
 def improve_language_spec(language):
+    """
+    Improve the language specification for code blocks.
+
+    Args:
+        language (str): The original language specification.
+
+    Returns:
+        str: The improved language specification.
+    """
     language_map = {
         "js": "javascript",
         "py": "python",
@@ -48,6 +85,15 @@ def improve_language_spec(language):
     return language_map.get(language.lower(), language)
 
 def improve_links(content):
+    """
+    Improve the formatting of links in the Markdown content.
+
+    Args:
+        content (str): The Markdown content containing links.
+
+    Returns:
+        str: The Markdown content with improved link formatting.
+    """
     # Improve inline links
     content = re.sub(
         r"\[([^\]]+)\]\(([^\)]+)\)",
@@ -66,6 +112,15 @@ def improve_links(content):
     return content
 
 def improve_images(content):
+    """
+    Improve the formatting of image references in the Markdown content.
+
+    Args:
+        content (str): The Markdown content containing image references.
+
+    Returns:
+        str: The Markdown content with improved image reference formatting.
+    """
     # Improve inline images
     content = re.sub(
         r"!\[([^\]]*)\]\(([^\)]+)\)",
@@ -76,6 +131,15 @@ def improve_images(content):
     return content
 
 def remove_repetitive_text(content):
+    """
+    Remove repetitive text patterns from the Markdown content.
+
+    Args:
+        content (str): The Markdown content containing potentially repetitive text.
+
+    Returns:
+        str: The Markdown content with repetitive text patterns removed.
+    """
     patterns_to_remove = [
         r"６ Collaborate with us on\s*GitHub\s*The source for this content can\s*be found on GitHub, where you\s*can also create and review\s*issues and pull requests\. For\s*more information, see our\s*contributor guide\.",
         r"\.NET feedback\s*\.NET is an open source project\.\s*Select a link to provide feedback:\s*Open a documentation issue\s*Provide product feedback",
@@ -102,6 +166,15 @@ def remove_repetitive_text(content):
     return content
 
 def extract_frontmatter(content):
+    """
+    Extract YAML frontmatter from the Markdown content.
+
+    Args:
+        content (str): The Markdown content potentially containing YAML frontmatter.
+
+    Returns:
+        tuple: A tuple containing the extracted frontmatter (dict or None) and the remaining content (str).
+    """
     frontmatter_match = re.match(r"^---\s*\n(.*?)\n---\s*\n", content, re.DOTALL)
     if frontmatter_match:
         frontmatter_str = frontmatter_match.group(1)
@@ -116,6 +189,20 @@ def extract_frontmatter(content):
     return None, content
 
 def improve_markdown2(input_file, output_file):
+    """
+    Improve the Markdown content in the input file and write the result to the output file.
+
+    This function performs various improvements on the Markdown content, including:
+    - Extracting and processing YAML frontmatter
+    - Converting Markdown to HTML and back to improved Markdown
+    - Processing headings, paragraphs, code blocks, lists, and tables
+    - Improving link and image formatting
+    - Removing repetitive text and extra newlines
+
+    Args:
+        input_file (str): The path to the input Markdown file.
+        output_file (str): The path to the output improved Markdown file.
+    """
     # Read the input file
     with open(input_file, "r", encoding="utf-8") as f:
         content = f.read()
@@ -196,6 +283,25 @@ def improve_markdown2(input_file, output_file):
         f.write(improved_md)
 
 def improve_markdown(input_file, output_file):
+    """
+    Improve the Markdown content in the input file and write the result to the output file.
+
+    This function performs various improvements on the Markdown content, including:
+    - Extracting and processing YAML frontmatter
+    - Converting Markdown to HTML and back to improved Markdown
+    - Processing headings, paragraphs, code blocks, lists, tables, blockquotes, and horizontal rules
+    - Improving link and image formatting
+    - Removing repetitive text and extra newlines
+
+    Args:
+        input_file (str): The path to the input Markdown file.
+        output_file (str): The path to the output improved Markdown file.
+
+    Raises:
+        FileNotFoundError: If the input file is not found.
+        PermissionError: If there's a permission issue accessing the input or output file.
+        Exception: For any other unexpected errors during processing.
+    """
     try:
         # Read the input file
         with open(input_file, "r", encoding="utf-8") as f:
@@ -294,6 +400,21 @@ def improve_markdown(input_file, output_file):
         sys.exit(1)
 
 def main():
+    """
+    Main function to run the improved Markdown cleaner script.
+
+    This function parses command-line arguments, checks for the existence of the input file,
+    and runs both improvement methods (improve_markdown and improve_markdown2) on the input file.
+
+    Usage:
+        python improved_markdown_cleaner.py <input_file> <output_file>
+
+    Args:
+        None (uses sys.argv for command-line arguments)
+
+    Returns:
+        None
+    """
     if len(sys.argv) != 3:
         print("Usage: python improved_markdown_cleaner.py <input_file> <output_file>")
         sys.exit(1)
