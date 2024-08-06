@@ -320,7 +320,7 @@ def improve_markdown2(input_file, output_file, config):
         f.write(improved_md)
     logging.info(f"Wrote improved Markdown to {output_file}")
 
-def improve_markdown(input_file, output_file):
+def improve_markdown(input_file, output_file, config):
     """
     Improve the Markdown content in the input file and write the result to the output file.
 
@@ -334,6 +334,7 @@ def improve_markdown(input_file, output_file):
     Args:
         input_file (str): The path to the input Markdown file.
         output_file (str): The path to the output improved Markdown file.
+        config (dict): The cleaning configuration.
 
     Raises:
         FileNotFoundError: If the input file is not found.
@@ -392,7 +393,7 @@ def improve_markdown(input_file, output_file):
             code = pre.find("code")
             if code:
                 language = code.get("class", [""])[0].replace("language-", "")
-                language = improve_language_spec(language)
+                language = improve_language_spec(language, config.get('language_mapping', {}))
                 improved_md += f"```{language}\n{code.text.strip()}\n```\n\n"
         logging.debug("Processed code blocks")
 
@@ -437,7 +438,7 @@ def improve_markdown(input_file, output_file):
         logging.debug("Removed extra newlines")
 
         # Remove repetitive text
-        improved_md = remove_repetitive_text(improved_md)
+        improved_md = remove_repetitive_text(improved_md, config.get('patterns_to_remove', []))
         logging.debug("Removed repetitive text")
 
         # Write the improved Markdown to the output file
