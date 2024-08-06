@@ -1,0 +1,28 @@
+# Cleaning rules configuration
+
+# Patterns to remove from the content
+patterns_to_remove:
+  - "６ Collaborate with us on\\s*GitHub\\s*The source for this content can\\s*be found on GitHub, where you\\s*can also create and review\\s*issues and pull requests\\. For\\s*more information, see our\\s*contributor guide\\."
+  - "\\.NET feedback\\s*\\.NET is an open source project\\.\\s*Select a link to provide feedback:\\s*Open a documentation issue\\s*Provide product feedback"
+  - ".NET feedback"
+  - ".NET is an open source project."
+  - "Select a link to provide feedback:"
+  - "Open a documentation issue"
+  - "Provide product feedback"
+  - "Feedback"
+  - "Collaborate with us on GitHub"
+  - "The source for this content can be found on GitHub, where you can also create and review issues and pull requests. For more information, see our contributor guide."
+  - "For more information about Accessibility, see the Microsoft Active Accessibility"
+  - "Remarks"
+  - "６ Collaborate with us on"
+  - "Collaborate with us on"
+  - "GitHub"
+
+# Language mapping for code blocks
+language_mapping:
+  js: javascript
+  py: python
+  rb: ruby
+  cs: csharp
+  cpp: cpp
+  ts: typescript
