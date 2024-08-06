@@ -4,6 +4,18 @@ import yaml
 from markdown import markdown
 from bs4 import BeautifulSoup
 
+def improve_language_spec(language):
+    language_map = {
+        "js": "javascript",
+        "py": "python",
+        "rb": "ruby",
+        "cs": "csharp",
+        "cpp": "cpp",
+        "ts": "typescript",
+        # Add more mappings as needed
+    }
+    return language_map.get(language.lower(), language)
+
 def extract_frontmatter(content):
     frontmatter_match = re.match(r"^---\s*\n(.*?)\n---\s*\n", content, re.DOTALL)
     if frontmatter_match:
@@ -51,6 +63,7 @@ def improve_markdown(input_file, output_file):
         code = pre.find("code")
         if code:
             language = code.get("class", [""])[0].replace("language-", "")
+            language = improve_language_spec(language)
             improved_md += f"```{language}\n{code.text.strip()}\n```\n\n"
 
     # Process lists
