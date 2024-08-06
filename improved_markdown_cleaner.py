@@ -19,6 +19,22 @@ def process_horizontal_rules(soup):
         hr_md += "---\n\n"
     return hr_md
 
+def process_nested_lists(ul_or_ol, indent=""):
+    list_md = ""
+    for li in ul_or_ol.find_all("li", recursive=False):
+        if ul_or_ol.name == "ul":
+            list_md += f"{indent}- {li.contents[0].strip()}\n"
+        else:
+            list_md += f"{indent}1. {li.contents[0].strip()}\n"
+        
+        nested_ul = li.find("ul")
+        nested_ol = li.find("ol")
+        if nested_ul:
+            list_md += process_nested_lists(nested_ul, indent + "  ")
+        elif nested_ol:
+            list_md += process_nested_lists(nested_ol, indent + "  ")
+    return list_md
+
 def improve_language_spec(language):
     language_map = {
         "js": "javascript",
@@ -146,14 +162,12 @@ def improve_markdown(input_file, output_file):
                 improved_md += f"```{language}\n{code.text.strip()}\n```\n\n"
 
         # Process lists
-        for ul in soup.find_all("ul"):
-            for li in ul.find_all("li"):
-                improved_md += f"- {li.text.strip()}\n"
+        for ul in soup.find_all("ul", recursive=False):
+            improved_md += process_nested_lists(ul)
             improved_md += "\n"
 
-        for ol in soup.find_all("ol"):
-            for i, li in enumerate(ol.find_all("li"), 1):
-                improved_md += f"{i}. {li.text.strip()}\n"
+        for ol in soup.find_all("ol", recursive=False):
+            improved_md += process_nested_lists(ol)
             improved_md += "\n"
 
         # Process tables
