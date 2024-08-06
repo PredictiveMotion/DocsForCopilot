@@ -9,6 +9,24 @@ import os
 from yaml.parser import ParserError
 from markdown.extensions.fenced_code import FencedCodeExtension
 
+def load_config(config_file):
+    """
+    Load the cleaning configuration from a YAML file.
+
+    Args:
+        config_file (str): Path to the configuration file.
+
+    Returns:
+        dict: The loaded configuration.
+    """
+    try:
+        with open(config_file, 'r') as f:
+            config = yaml.safe_load(f)
+        return config
+    except Exception as e:
+        logging.error(f"Error loading configuration file: {str(e)}")
+        return {}
+
 def process_blockquotes(soup):
     """
     Process blockquotes in the BeautifulSoup object and convert them to Markdown format.
@@ -188,7 +206,7 @@ def extract_frontmatter(content):
             print(f"Warning: Unexpected error processing frontmatter: {str(e)}")
     return None, content
 
-def improve_markdown2(input_file, output_file):
+def improve_markdown2(input_file, output_file, config):
     """
     Improve the Markdown content in the input file and write the result to the output file.
 
@@ -202,6 +220,7 @@ def improve_markdown2(input_file, output_file):
     Args:
         input_file (str): The path to the input Markdown file.
         output_file (str): The path to the output improved Markdown file.
+        config (dict): The cleaning configuration.
     """
     logging.info(f"Starting second improvement pass for {input_file}")
     
@@ -271,7 +290,7 @@ def improve_markdown2(input_file, output_file):
         code = pre.find("code")
         if code:
             language = code.get("class", [""])[0].replace("language-", "")
-            language = improve_language_spec(language)
+            language = improve_language_spec(language, config.get('language_mapping', {}))
             improved_md += f"```{language}\n{code.text.strip()}\n```\n\n"
     logging.debug("Processed code blocks with improved language specification")
 
@@ -312,7 +331,7 @@ def improve_markdown2(input_file, output_file):
     logging.debug("Removed extra newlines")
 
     # Remove repetitive text
-    improved_md = remove_repetitive_text(improved_md)
+    improved_md = remove_repetitive_text(improved_md, config.get('patterns_to_remove', []))
     logging.debug("Removed repetitive text")
 
     # Write the improved Markdown to the output file
@@ -470,6 +489,7 @@ def parse_arguments():
     parser.add_argument("--log-file", help="Path to the log file")
     parser.add_argument("--log-level", choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], 
                         default='INFO', help="Set the logging level")
+    parser.add_argument("--config", default="cleaning_config.yaml", help="Path to the cleaning configuration file")
     return parser.parse_args()
 
 def setup_logging(args):
@@ -519,14 +539,17 @@ def main():
         logging.error(f"Input file '{args.input_file}' does not exist.")
         sys.exit(1)
 
+    config = load_config(args.config)
+    logging.info(f"Loaded configuration from {args.config}")
+
     try:
         # Step 1: Improve Markdown using the first method
-        improve_markdown(args.input_file, args.output_file)
+        improve_markdown(args.input_file, args.output_file, config)
         logging.info(f"First pass: Improved Markdown has been written to {args.output_file}")
 
         if not args.single_pass:
             # Step 2: Further improve the Markdown using the second method
-            improve_markdown2(args.output_file, args.output_file)
+            improve_markdown2(args.output_file, args.output_file, config)
             logging.info(f"Second pass: Further improved Markdown has been written to {args.output_file}")
         else:
             logging.info("Single pass mode: Skipping second improvement pass")
