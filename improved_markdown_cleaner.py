@@ -241,7 +241,7 @@ def improve_markdown2(input_file, output_file):
     reordered_md = ""
     for heading in original_headings:
         level, text = heading
-        heading_pattern = rf"^{'#'{{1,6}}} {re.escape(text)}$"
+        heading_pattern = r"^#{1,6} " + re.escape(text) + "$"
         match = re.search(heading_pattern, improved_md, re.MULTILINE)
         if match:
             reordered_md += match.group() + "\n\n"
