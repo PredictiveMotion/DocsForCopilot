@@ -44,6 +44,32 @@ def improve_images(content):
 
     return content
 
+def remove_repetitive_text(content):
+    patterns_to_remove = [
+        r"６ Collaborate with us on\s*GitHub\s*The source for this content can\s*be found on GitHub, where you\s*can also create and review\s*issues and pull requests\. For\s*more information, see our\s*contributor guide\.",
+        r"\.NET feedback\s*\.NET is an open source project\.\s*Select a link to provide feedback:\s*Open a documentation issue\s*Provide product feedback",
+        r"\\.NET feedback\\s*\\.NET is an open source project\\.\\s*Select a link to provide feedback:\\s*Open a documentation issue\\s*Provide product feedback"
+        r".NET feedback",
+        r".NET is an open source project.",
+        r"Select a link to provide feedback:",
+        r"Open a documentation issue",
+        r"Provide product feedback",
+        r"Feedback",
+        r"Collaborate with us on GitHub",
+        r"The source for this content can be found on GitHub, where you can also create and review issues and pull requests. For more information, see our contributor guide.",
+        r".NET feedback",
+        r"For more information about Accessibility, see the Microsoft Active Accessibility",
+        r"Remarks",
+        r"６ Collaborate with us on",
+        r"Collaborate with us on",
+        r"GitHub",
+    ]
+
+    for pattern in patterns_to_remove:
+        content = re.sub(pattern, "", content, flags=re.DOTALL | re.MULTILINE)
+
+    return content
+
 def extract_frontmatter(content):
     frontmatter_match = re.match(r"^---\s*\n(.*?)\n---\s*\n", content, re.DOTALL)
     if frontmatter_match:
@@ -124,6 +150,9 @@ def improve_markdown(input_file, output_file):
 
     # Remove extra newlines
     improved_md = re.sub(r"\n{3,}", "\n\n", improved_md)
+
+    # Remove repetitive text
+    improved_md = remove_repetitive_text(improved_md)
 
     # Write the improved Markdown to the output file
     with open(output_file, "w", encoding="utf-8") as f:
