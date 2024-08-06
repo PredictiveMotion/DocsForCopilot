@@ -116,7 +116,14 @@ def improve_markdown(input_file, output_file):
 
         # Process paragraphs
         for p in soup.find_all("p"):
-            improved_md += f"{p.text.strip()}\n\n"
+            paragraph_content = p.decode_contents()
+            # Convert <strong> to **
+            paragraph_content = re.sub(r'<strong>(.*?)</strong>', r'**\1**', paragraph_content)
+            # Convert <em> to *
+            paragraph_content = re.sub(r'<em>(.*?)</em>', r'*\1*', paragraph_content)
+            # Convert <a> to []()
+            paragraph_content = re.sub(r'<a href="(.*?)">(.*?)</a>', r'[\2](\1)', paragraph_content)
+            improved_md += f"{paragraph_content.strip()}\n\n"
 
         # Process code blocks
         for pre in soup.find_all("pre"):
