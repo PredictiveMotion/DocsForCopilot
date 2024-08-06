@@ -233,6 +233,21 @@ def improve_markdown2(input_file, output_file):
             heading_stack.append(min(heading_stack[-1] + 1, 6))
         adjusted_level = len(heading_stack)
         improved_md += f"{'#' * adjusted_level} {tag.text.strip()}\n\n"
+        
+    # Store the original order of headings
+    original_headings = [(tag.name, tag.text.strip()) for tag in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"])]
+        
+    # Reorder the improved_md content to match the original heading order
+    reordered_md = ""
+    for heading in original_headings:
+        level, text = heading
+        heading_pattern = rf"^{'#'{{1,6}}} {re.escape(text)}$"
+        match = re.search(heading_pattern, improved_md, re.MULTILINE)
+        if match:
+            reordered_md += match.group() + "\n\n"
+            improved_md = improved_md[:match.start()] + improved_md[match.end():]
+        
+    improved_md = reordered_md + improved_md
 
     # Process paragraphs
     for p in soup.find_all("p"):
