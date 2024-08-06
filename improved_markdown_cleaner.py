@@ -9,6 +9,16 @@ import os
 from yaml.parser import ParserError
 from markdown.extensions.fenced_code import FencedCodeExtension
 
+def log_markdown_change(change_type, details):
+    """
+    Log a change made to the Markdown content.
+
+    Args:
+        change_type (str): The type of change (e.g., 'header_removed', 'header_added').
+        details (str): Additional details about the change.
+    """
+    logging.info(f"improve_markdown2:{change_type}:{details}")
+
 def load_config(config_file):
     """
     Load the cleaning configuration from a YAML file.
@@ -233,6 +243,7 @@ def improve_markdown2(input_file, output_file, config):
 
     # Process headings and ensure consistent levels
     heading_stack = []
+    original_headings = [(tag.name, tag.text.strip()) for tag in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"])]
     for tag in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"]):
         level = int(tag.name[1])
         while heading_stack and heading_stack[-1] >= level:
@@ -243,10 +254,10 @@ def improve_markdown2(input_file, output_file, config):
             heading_stack.append(min(heading_stack[-1] + 1, 6))
         adjusted_level = len(heading_stack)
         improved_md += f"{'#' * adjusted_level} {tag.text.strip()}\n\n"
-    logging.debug("Processed headings and ensured consistent levels")
         
-    # Store the original order of headings
-    original_headings = [(tag.name, tag.text.strip()) for tag in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"])]
+        if adjusted_level != level:
+            log_markdown_change("header_level_changed", f"'{tag.text.strip()}' from H{level} to H{adjusted_level}")
+    logging.debug("Processed headings and ensured consistent levels")
         
     # Reorder the improved_md content to match the original heading order
     reordered_md = ""
@@ -257,6 +268,15 @@ def improve_markdown2(input_file, output_file, config):
         if match:
             reordered_md += match.group() + "\n\n"
             improved_md = improved_md[:match.start()] + improved_md[match.end():]
+        else:
+            log_markdown_change("header_removed", f"'{text}'")
+    
+    # Check for new headers
+    for line in improved_md.split('\n'):
+        if line.startswith('#'):
+            header_text = line.lstrip('#').strip()
+            if not any(header_text == h[1] for h in original_headings):
+                log_markdown_change("header_added", f"'{header_text}'")
     
     improved_md = reordered_md + improved_md
     logging.debug("Reordered headings to match original order")
