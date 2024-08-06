@@ -7,6 +7,18 @@ import os
 from yaml.parser import ParserError
 from markdown.extensions.fenced_code import FencedCodeExtension
 
+def process_blockquotes(soup):
+    blockquote_md = ""
+    for blockquote in soup.find_all("blockquote"):
+        blockquote_md += "> " + blockquote.text.strip().replace("\n", "\n> ") + "\n\n"
+    return blockquote_md
+
+def process_horizontal_rules(soup):
+    hr_md = ""
+    for hr in soup.find_all("hr"):
+        hr_md += "---\n\n"
+    return hr_md
+
 def improve_language_spec(language):
     language_map = {
         "js": "javascript",
@@ -154,6 +166,12 @@ def improve_markdown(input_file, output_file):
                 cells = [td.text.strip() for td in row.find_all("td")]
                 improved_md += "| " + " | ".join(cells) + " |\n"
             improved_md += "\n"
+
+        # Process blockquotes
+        improved_md += process_blockquotes(soup)
+
+        # Process horizontal rules
+        improved_md += process_horizontal_rules(soup)
 
         # Improve link formatting
         improved_md = improve_links(improved_md)
