@@ -25,10 +25,8 @@ def process_blockquotes(soup):
 def process_horizontal_rules(soup):
     """
     Process horizontal rules in the BeautifulSoup object and convert them to Markdown format.
-
     Args:
         soup (BeautifulSoup): The BeautifulSoup object containing the parsed HTML.
-
     Returns:
         str: A string containing the processed horizontal rules in Markdown format.
     """
