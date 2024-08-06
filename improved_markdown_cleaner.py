@@ -1,6 +1,7 @@
 import re
 import sys
 import yaml
+import argparse
 from markdown import markdown
 from bs4 import BeautifulSoup
 import os
@@ -416,6 +417,20 @@ def improve_markdown(input_file, output_file):
         print(f"An unexpected error occurred: {str(e)}")
         sys.exit(1)
 
+def parse_arguments():
+    """
+    Parse command-line arguments for the improved Markdown cleaner script.
+
+    Returns:
+        argparse.Namespace: An object containing the parsed arguments.
+    """
+    parser = argparse.ArgumentParser(description="Improve Markdown files with advanced cleaning and formatting.")
+    parser.add_argument("input_file", help="Path to the input Markdown file")
+    parser.add_argument("output_file", help="Path to the output improved Markdown file")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
+    parser.add_argument("--single-pass", action="store_true", help="Run only the first improvement pass")
+    return parser.parse_args()
+
 def main():
     """
     Main function to run the improved Markdown cleaner script.
@@ -424,33 +439,36 @@ def main():
     and runs both improvement methods (improve_markdown and improve_markdown2) on the input file.
 
     Usage:
-        python improved_markdown_cleaner.py <input_file> <output_file>
+        python improved_markdown_cleaner.py <input_file> <output_file> [options]
 
     Args:
-        None (uses sys.argv for command-line arguments)
+        None (uses argparse for command-line arguments)
 
     Returns:
         None
     """
-    if len(sys.argv) != 3:
-        print("Usage: python improved_markdown_cleaner.py <input_file> <output_file>")
-        sys.exit(1)
+    args = parse_arguments()
 
-    input_file = sys.argv[1]
-    output_file = sys.argv[2]
-
-    if not os.path.exists(input_file):
-        print(f"Error: Input file '{input_file}' does not exist.")
+    if not os.path.exists(args.input_file):
+        print(f"Error: Input file '{args.input_file}' does not exist.")
         sys.exit(1)
 
     try:
         # Step 1: Improve Markdown using the first method
-        improve_markdown(input_file, output_file)
-        print(f"First pass: Improved Markdown has been written to {output_file}")
+        improve_markdown(args.input_file, args.output_file)
+        if args.verbose:
+            print(f"First pass: Improved Markdown has been written to {args.output_file}")
 
-        # Step 2: Further improve the Markdown using the second method
-        improve_markdown2(output_file, output_file)
-        print(f"Second pass: Further improved Markdown has been written to {output_file}")
+        if not args.single_pass:
+            # Step 2: Further improve the Markdown using the second method
+            improve_markdown2(args.output_file, args.output_file)
+            if args.verbose:
+                print(f"Second pass: Further improved Markdown has been written to {args.output_file}")
+        elif args.verbose:
+            print("Single pass mode: Skipping second improvement pass")
+
+        if args.verbose:
+            print("Markdown improvement completed successfully")
 
     except Exception as e:
         print(f"An error occurred while processing the file: {str(e)}")
