@@ -115,6 +115,86 @@ def extract_frontmatter(content):
             print(f"Warning: Unexpected error processing frontmatter: {str(e)}")
     return None, content
 
+def improve_markdown2(input_file, output_file):
+    # Read the input file
+    with open(input_file, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    # Extract and process YAML frontmatter
+    frontmatter, content = extract_frontmatter(content)
+
+    # Convert Markdown to HTML
+    html = markdown(content, extensions=["fenced_code", "tables"])
+
+    # Parse the HTML
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Initialize improved Markdown content
+    improved_md = ""
+
+    # Add processed frontmatter
+    if frontmatter:
+        improved_md += f"---\n{yaml.dump(frontmatter, sort_keys=False)}---\n\n"
+
+    # Process headings and ensure consistent levels
+    heading_level = 1
+    for tag in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"]):
+        level = int(tag.name[1])
+        if level > heading_level:
+            heading_level = min(level, heading_level + 1)
+        improved_md += f"{'#' * heading_level} {tag.text.strip()}\n\n"
+        heading_level += 1
+
+    # Process paragraphs
+    for p in soup.find_all("p"):
+        improved_md += f"{p.text.strip()}\n\n"
+
+    # Process code blocks with improved language specification
+    for pre in soup.find_all("pre"):
+        code = pre.find("code")
+        if code:
+            language = code.get("class", [""])[0].replace("language-", "")
+            language = improve_language_spec(language)
+            improved_md += f"```{language}\n{code.text.strip()}\n```\n\n"
+
+    # Process lists
+    for ul in soup.find_all("ul"):
+        for li in ul.find_all("li"):
+            improved_md += f"- {li.text.strip()}\n"
+        improved_md += "\n"
+
+    for ol in soup.find_all("ol"):
+        for i, li in enumerate(ol.find_all("li"), 1):
+            improved_md += f"{i}. {li.text.strip()}\n"
+        improved_md += "\n"
+
+    # Process tables
+    for table in soup.find_all("table"):
+        headers = [th.text.strip() for th in table.find_all("th")]
+        improved_md += "| " + " | ".join(headers) + " |\n"
+        improved_md += "| " + " | ".join(["---"] * len(headers)) + " |\n"
+
+        for row in table.find_all("tr")[1:]:
+            cells = [td.text.strip() for td in row.find_all("td")]
+            improved_md += "| " + " | ".join(cells) + " |\n"
+        improved_md += "\n"
+
+    # Improve link formatting
+    improved_md = improve_links(improved_md)
+
+    # Improve image references
+    improved_md = improve_images(improved_md)
+
+    # Remove extra newlines
+    improved_md = re.sub(r"\n{3,}", "\n\n", improved_md)
+
+    # Remove repetitive text
+    improved_md = remove_repetitive_text(improved_md)
+
+    # Write the improved Markdown to the output file
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write(improved_md)
+
 def improve_markdown(input_file, output_file):
     try:
         # Read the input file
@@ -213,7 +293,7 @@ def improve_markdown(input_file, output_file):
         print(f"An unexpected error occurred: {str(e)}")
         sys.exit(1)
 
-if __name__ == "__main__":
+def main():
     if len(sys.argv) != 3:
         print("Usage: python improved_markdown_cleaner.py <input_file> <output_file>")
         sys.exit(1)
@@ -226,8 +306,17 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
+        # Step 1: Improve Markdown using the first method
         improve_markdown(input_file, output_file)
-        print(f"Improved Markdown has been written to {output_file}")
+        print(f"First pass: Improved Markdown has been written to {output_file}")
+
+        # Step 2: Further improve the Markdown using the second method
+        improve_markdown2(output_file, output_file)
+        print(f"Second pass: Further improved Markdown has been written to {output_file}")
+
     except Exception as e:
         print(f"An error occurred while processing the file: {str(e)}")
         sys.exit(1)
+
+if __name__ == "__main__":
+    main()
