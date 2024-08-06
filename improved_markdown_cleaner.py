@@ -16,6 +16,34 @@ def improve_language_spec(language):
     }
     return language_map.get(language.lower(), language)
 
+def improve_links(content):
+    # Improve inline links
+    content = re.sub(
+        r"\[([^\]]+)\]\(([^\)]+)\)",
+        lambda m: f"[{m.group(1).strip()}]({m.group(2).strip()})",
+        content,
+    )
+
+    # Improve reference-style links
+    content = re.sub(
+        r"^\[([^\]]+)\]:\s*(.+)$",
+        lambda m: f"[{m.group(1).strip()}]: {m.group(2).strip()}",
+        content,
+        flags=re.MULTILINE,
+    )
+
+    return content
+
+def improve_images(content):
+    # Improve inline images
+    content = re.sub(
+        r"!\[([^\]]*)\]\(([^\)]+)\)",
+        lambda m: f"![{m.group(1).strip()}]({m.group(2).strip()})",
+        content,
+    )
+
+    return content
+
 def extract_frontmatter(content):
     frontmatter_match = re.match(r"^---\s*\n(.*?)\n---\s*\n", content, re.DOTALL)
     if frontmatter_match:
@@ -87,6 +115,12 @@ def improve_markdown(input_file, output_file):
             cells = [td.text.strip() for td in row.find_all("td")]
             improved_md += "| " + " | ".join(cells) + " |\n"
         improved_md += "\n"
+
+    # Improve link formatting
+    improved_md = improve_links(improved_md)
+
+    # Improve image references
+    improved_md = improve_images(improved_md)
 
     # Remove extra newlines
     improved_md = re.sub(r"\n{3,}", "\n\n", improved_md)
