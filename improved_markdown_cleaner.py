@@ -222,13 +222,17 @@ def improve_markdown2(input_file, output_file):
         improved_md += f"---\n{yaml.dump(frontmatter, sort_keys=False)}---\n\n"
 
     # Process headings and ensure consistent levels
-    heading_level = 1
+    heading_stack = []
     for tag in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"]):
         level = int(tag.name[1])
-        if level > heading_level:
-            heading_level = min(level, heading_level + 1)
-        improved_md += f"{'#' * heading_level} {tag.text.strip()}\n\n"
-        heading_level += 1
+        while heading_stack and heading_stack[-1] >= level:
+            heading_stack.pop()
+        if not heading_stack:
+            heading_stack.append(level)
+        elif level > heading_stack[-1]:
+            heading_stack.append(min(heading_stack[-1] + 1, 6))
+        adjusted_level = len(heading_stack)
+        improved_md += f"{'#' * adjusted_level} {tag.text.strip()}\n\n"
 
     # Process paragraphs
     for p in soup.find_all("p"):
