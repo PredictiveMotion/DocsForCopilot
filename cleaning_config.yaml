@@ -4,7 +4,6 @@
 patterns_to_remove:
   - "(?s)６ Collaborate with us on.*?\\.NET feedback.*?GitHub.*?\\.NET is an open source project\\..*?The source for this content can.*?Select a link to provide feedback:.*?be found on GitHub, where you.*?can also create and review.*?Open a documentation issue.*?issues and pull requests\\. For.*?more information, see our.*?Provide product feedback.*?contributor guide\\."
   - "For more information about Accessibility, see the Microsoft Active Accessibility"
-  - "Remarks"
 
 # Language mapping for code blocks
 language_mapping:
