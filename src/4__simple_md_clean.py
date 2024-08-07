@@ -19,6 +19,33 @@ def remove_repetitive_text(content, patterns_to_remove):
         content = re.sub(pattern, "", content, flags=re.DOTALL | re.MULTILINE)
     return content
 
+def remove_specific_lines(content):
+    patterns_to_remove = [
+        r'^\s*[\d\W]*Collaborate with us on.*$',
+        r'^\s*[\d\W]*\.NET feedback.*$',
+        r'^\s*[\d\W]*GitHub.*$',
+        r'^\s*[\d\W]*\.NET is an open source project\..*$',
+        r'^\s*[\d\W]*The source for this content can.*$',
+        r'^\s*[\d\W]*Select a link to provide feedback:.*$',
+        r'^\s*[\d\W]*be found on GitHub, where you.*$',
+        r'^\s*[\d\W]*can also create and review.*$',
+        r'^\s*[\d\W]*Open a documentation issue.*$',
+        r'^\s*[\d\W]*issues and pull requests\. For.*$',
+        r'^\s*[\d\W]*more information, see our.*$',
+        r'^\s*[\d\W]*Provide product feedback.*$',
+        r'^\s*[\d\W]*contributor guide\..*$',
+        r'^\s*[\d\W]*Tell us about your PDF experience\..*$'
+        
+
+    ]
+    
+    cleaned_lines = []
+    for line in content.split('\n'):
+        if not any(re.match(pattern, line) for pattern in patterns_to_remove):
+            cleaned_lines.append(line)
+    
+    return '\n'.join(cleaned_lines)
+
 def clean_markdown(input_file, output_file, config):
     try:
         logging.info(f"Starting cleaning process for {input_file}")
@@ -29,6 +56,9 @@ def clean_markdown(input_file, output_file, config):
 
         cleaned_content = remove_repetitive_text(content, config.get('patterns_to_remove', []))
         logging.debug("Removed repetitive text")
+
+        cleaned_content = remove_specific_lines(cleaned_content)
+        logging.debug("Removed specific lines")
 
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(cleaned_content)
