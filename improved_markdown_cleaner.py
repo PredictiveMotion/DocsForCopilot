@@ -85,14 +85,8 @@ def extract_frontmatter(content):
     return None, content
 
 def process_code_block(code_text, language):
-    lines = code_text.split('\n')
-    processed_lines = []
-    for line in lines:
-        if line.strip():
-            processed_lines.append('    ' + line)
-        else:
-            processed_lines.append(line)
-    return f"```{language}\n" + '\n'.join(processed_lines) + "\n```\n\n"
+    # Preserve original formatting, only add language specifier
+    return f"```{language}\n{code_text}\n```\n\n"
 
 def improve_markdown(input_file, output_file, config):
     try:
@@ -155,7 +149,8 @@ def improve_markdown(input_file, output_file, config):
                 if code:
                     language = code.get("class", [""])[0].replace("language-", "")
                     language = improve_language_spec(language, config.get('language_mapping', {}))
-                    improved_md += process_code_block(code.text.strip(), language)
+                    # Preserve original formatting, including line breaks
+                    improved_md += process_code_block(code.text, language)
             
             elif tag.name in ["ul", "ol"]:
                 improved_md += process_nested_lists(tag)
