@@ -9,9 +9,6 @@ import os
 from yaml.parser import ParserError
 from markdown.extensions.fenced_code import FencedCodeExtension
 
-def log_markdown_change(change_type, details):
-    logging.info(f"improve_markdown2:{change_type}:{details}")
-
 def load_config(config_file):
     try:
         with open(config_file, 'r') as f:
@@ -20,18 +17,6 @@ def load_config(config_file):
     except Exception as e:
         logging.error(f"Error loading configuration file: {str(e)}")
         return {}
-
-def process_blockquotes(soup):
-    blockquote_md = ""
-    for blockquote in soup.find_all("blockquote"):
-        blockquote_md += "> " + blockquote.text.strip().replace("\n", "\n> ") + "\n\n"
-    return blockquote_md
-
-def process_horizontal_rules(soup):
-    hr_md = ""
-    for hr in soup.find_all("hr"):
-        hr_md += "---\n\n"
-    return hr_md
 
 def process_nested_lists(ul_or_ol, indent=""):
     list_md = ""
@@ -49,17 +34,8 @@ def process_nested_lists(ul_or_ol, indent=""):
             list_md += process_nested_lists(nested_ol, indent + "  ")
     return list_md
 
-def improve_language_spec(language):
-    language_map = {
-        "js": "javascript",
-        "py": "python",
-        "rb": "ruby",
-        "cs": "csharp",
-        "cpp": "cpp",
-        "ts": "typescript",
-        # Add more mappings as needed
-    }
-    return language_map.get(language.lower(), language)
+def improve_language_spec(language, language_mapping):
+    return language_mapping.get(language.lower(), language)
 
 def improve_links(content):
     # Improve inline links
@@ -92,7 +68,6 @@ def improve_images(content):
 def remove_repetitive_text(content, patterns_to_remove):
     for pattern in patterns_to_remove:
         content = re.sub(pattern, "", content, flags=re.DOTALL | re.MULTILINE)
-
     return content
 
 def extract_frontmatter(content):
@@ -104,123 +79,37 @@ def extract_frontmatter(content):
             content = content[frontmatter_match.end():]
             return frontmatter, content
         except ParserError as e:
-            print(f"Warning: Error parsing YAML frontmatter: {str(e)}")
+            logging.warning(f"Error parsing YAML frontmatter: {str(e)}")
         except Exception as e:
-            print(f"Warning: Unexpected error processing frontmatter: {str(e)}")
+            logging.warning(f"Unexpected error processing frontmatter: {str(e)}")
     return None, content
-
-def improve_markdown2(input_file, output_file, config):
-    logging.info(f"Starting second improvement pass for {input_file}")
-    
-    with open(input_file, "r", encoding="utf-8") as f:
-        content = f.read()
-    logging.debug(f"Read {len(content)} characters from {input_file}")
-
-    frontmatter, content = extract_frontmatter(content)
-    if frontmatter:
-        logging.debug("Extracted frontmatter")
-
-    html = markdown(content, extensions=["fenced_code", "tables"])
-    logging.debug("Converted Markdown to HTML")
-
-    soup = BeautifulSoup(html, "html.parser")
-    logging.debug("Parsed HTML with BeautifulSoup")
-
-    improved_md = ""
-
-    if frontmatter:
-        improved_md += "---\n" + yaml.dump(frontmatter) + "---\n\n"
-
-    heading_stack = []
-    for tag in soup.children:
-        if isinstance(tag, str):
-            improved_md += tag.strip() + "\n\n"
-            continue
-        
-        if tag.name in ["h1", "h2", "h3", "h4", "h5", "h6"]:
-            level = int(tag.name[1])
-            text = tag.get_text(strip=True)
-            
-            while heading_stack and level <= heading_stack[-1]:
-                heading_stack.pop()
-            
-            if not heading_stack or level > heading_stack[-1]:
-                heading_stack.append(level)
-            
-            new_level = len(heading_stack)
-            improved_md += f"{'#' * new_level} {text}\n\n"
-            log_markdown_change('header_level_changed', f"'{text}' from H{level} to H{new_level}")
-        
-        elif tag.name == "p":
-            improved_md += tag.get_text(strip=True) + "\n\n"
-        
-        elif tag.name == "pre":
-            code = tag.get_text(strip=True)
-            language = tag.get('class', [None])[0]
-            if language:
-                language = improve_language_spec(language)
-                improved_md += f"```{language}\n{code}\n```\n\n"
-            else:
-                improved_md += f"```\n{code}\n```\n\n"
-        
-        elif tag.name == "ul":
-            improved_md += process_nested_lists(tag)
-        
-        elif tag.name == "ol":
-            improved_md += process_nested_lists(tag)
-        
-        elif tag.name == "table":
-            improved_md += process_tables(tag)
-        
-        elif tag.name == "blockquote":
-            improved_md += "> " + tag.get_text(strip=True).replace("\n", "\n> ") + "\n\n"
-        
-        elif tag.name == "hr":
-            improved_md += "---\n\n"
-
-    improved_md = improve_links(improved_md)
-    logging.debug("Improved link formatting")
-
-    improved_md = improve_images(improved_md)
-    logging.debug("Improved image references")
-
-    improved_md = re.sub(r"\n{3,}", "\n\n", improved_md)
-    logging.debug("Removed extra newlines")
-
-    improved_md = remove_repetitive_text(improved_md, config.get('patterns_to_remove', []))
-    logging.debug("Removed repetitive text")
-
-    with open(output_file, "w", encoding="utf-8") as f:
-        f.write(improved_md)
-    logging.info(f"Wrote improved Markdown to {output_file}")
-
 
 def improve_markdown(input_file, output_file, config):
     try:
         logging.info(f"Starting improvement process for {input_file}")
         
-        # Read the input file
         with open(input_file, "r", encoding="utf-8") as f:
             content = f.read()
         logging.debug(f"Read {len(content)} characters from {input_file}")
 
-        # Extract and process YAML frontmatter
         frontmatter, content = extract_frontmatter(content)
         if frontmatter:
             logging.debug("Extracted YAML frontmatter")
 
-        # Convert Markdown to HTML
+        # Pre-process headers to protect special characters
+        def protect_headers(match):
+            return f"{match.group(1)} {match.group(2).replace('#', '‡')}"
+        
+        content = re.sub(r'^(#+)\s+(.*?)$', protect_headers, content, flags=re.MULTILINE)
+
         html = markdown(content, extensions=[FencedCodeExtension(), "tables"])
         logging.debug("Converted Markdown to HTML")
 
-        # Parse the HTML
         soup = BeautifulSoup(html, "html.parser")
         logging.debug("Parsed HTML with BeautifulSoup")
 
-        # Initialize improved Markdown content
         improved_md = ""
 
-        # Add processed frontmatter
         if frontmatter:
             improved_md += f"---\n{yaml.dump(frontmatter, sort_keys=False)}---\n\n"
             logging.debug("Added processed frontmatter to improved Markdown")
@@ -246,11 +135,8 @@ def improve_markdown(input_file, output_file, config):
             
             elif tag.name == "p":
                 paragraph_content = tag.decode_contents()
-                # Convert <strong> to **
                 paragraph_content = re.sub(r'<strong>(.*?)</strong>', r'**\1**', paragraph_content)
-                # Convert <em> to *
                 paragraph_content = re.sub(r'<em>(.*?)</em>', r'*\1*', paragraph_content)
-                # Convert <a> to []()
                 paragraph_content = re.sub(r'<a href="(.*?)">(.*?)</a>', r'[\2](\1)', paragraph_content)
                 improved_md += f"{paragraph_content.strip()}\n\n"
             
@@ -261,11 +147,7 @@ def improve_markdown(input_file, output_file, config):
                     language = improve_language_spec(language, config.get('language_mapping', {}))
                     improved_md += f"```{language}\n{code.text.strip()}\n```\n\n"
             
-            elif tag.name == "ul":
-                improved_md += process_nested_lists(tag)
-                improved_md += "\n"
-            
-            elif tag.name == "ol":
+            elif tag.name in ["ul", "ol"]:
                 improved_md += process_nested_lists(tag)
                 improved_md += "\n"
             
@@ -284,23 +166,21 @@ def improve_markdown(input_file, output_file, config):
             elif tag.name == "hr":
                 improved_md += "---\n\n"
 
-        # Improve link formatting
         improved_md = improve_links(improved_md)
         logging.debug("Improved link formatting")
 
-        # Improve image references
         improved_md = improve_images(improved_md)
         logging.debug("Improved image references")
 
-        # Remove extra newlines
         improved_md = re.sub(r"\n{3,}", "\n\n", improved_md)
         logging.debug("Removed extra newlines")
 
-        # Remove repetitive text
         improved_md = remove_repetitive_text(improved_md, config.get('patterns_to_remove', []))
         logging.debug("Removed repetitive text")
 
-        # Write the improved Markdown to the output file
+        # Restore protected characters in headers
+        improved_md = improved_md.replace('‡', '#')
+
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(improved_md)
         logging.info(f"Wrote improved Markdown to {output_file}")
@@ -320,7 +200,6 @@ def parse_arguments():
     parser.add_argument("input_file", help="Path to the input Markdown file")
     parser.add_argument("output_file", help="Path to the output improved Markdown file")
     parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
-    parser.add_argument("--single-pass", action="store_true", help="Run only the first improvement pass")
     parser.add_argument("--log-file", help="Path to the log file")
     parser.add_argument("--log-level", choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], 
                         default='INFO', help="Set the logging level")
@@ -357,19 +236,8 @@ def main():
     logging.info(f"Loaded configuration from {args.config}")
 
     try:
-        # Step 1: Improve Markdown using the first method
         improve_markdown(args.input_file, args.output_file, config)
-        logging.info(f"First pass: Improved Markdown has been written to {args.output_file}")
-
-        if not args.single_pass:
-            # Step 2: Further improve the Markdown using the second method
-            improve_markdown2(args.output_file, args.output_file, config)
-            logging.info(f"Second pass: Further improved Markdown has been written to {args.output_file}")
-        else:
-            logging.info("Single pass mode: Skipping second improvement pass")
-
         logging.info("Markdown improvement completed successfully")
-
     except Exception as e:
         logging.exception(f"An error occurred while processing the file: {str(e)}")
         sys.exit(1)
