@@ -2,6 +2,7 @@ import os
 import sys
 # from pdfminer.pdfparser import PDFSyntaxError
 import pdfplumber
+from pdfminer.pdfparser import PDFSyntaxError
 
 # Ensure the parent directory of 'src' is in the sys.path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -19,13 +20,14 @@ def pdf_to_markdown(input_pdf_path, output_markdown_path, converter="pdfplumber"
             markdown_text = pdf_to_markdown_pdfplumber(input_pdf_path)
         else:
             print(f"Invalid converter: {converter}")
-            sys.exit(1)
+            return
+
         with open(output_markdown_path, "w", encoding="utf-8") as f:
             f.write(markdown_text)
 
         print(f"Markdown file created at: {output_markdown_path}")
 
-    except pdfplumber.PDFSyntaxError as e:
+    except PDFSyntaxError as e:
         print(f"PDFSyntaxError occurred while processing {input_pdf_path}: {e}")
         with open("bad_pdfs.txt", "a", encoding="utf-8") as f:
             bad_pdf = os.path.basename(input_pdf_path)
@@ -41,6 +43,14 @@ def pdf_to_markdown(input_pdf_path, output_markdown_path, converter="pdfplumber"
         if os.path.exists(output_markdown_path):
             os.remove(output_markdown_path)
             print(f"Deleted offending Markdown file: {output_markdown_path}")
+    except Exception as e:
+        print(f"An unexpected error occurred while processing {input_pdf_path}: {e}")
+        with open("bad_pdfs.txt", "a", encoding="utf-8") as f:
+            bad_pdf = os.path.basename(input_pdf_path)
+            f.write(f"{bad_pdf} - Unexpected Error: {str(e)}\n")
+        if os.path.exists(output_markdown_path):
+            os.remove(output_markdown_path)
+            print(f"Deleted offending Markdown file: {output_markdown_path}")
 
 def main():
     args = parse_arguments()
@@ -50,7 +60,7 @@ def main():
     markdown_directory = os.path.abspath(markdown_directory)
     if not os.path.exists(pdf_directory):
         print(f"PDF directory does not exist: {pdf_directory}")
-        sys.exit(1)
+        return
 
     if not os.path.exists(markdown_directory):
         os.makedirs(markdown_directory)
