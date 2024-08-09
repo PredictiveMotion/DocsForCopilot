@@ -69,6 +69,10 @@ def main():
     pdf_files = [f for f in os.listdir(pdf_directory) if f.endswith(".pdf")]
     total_files = len(pdf_files)
 
+    # Set the default converter to "pdfplumber" if not specified
+    if not converter_to_use:
+        converter_to_use = "pdfplumber"
+
     for index, filename in enumerate(pdf_files, start=1):
         pdf_path = os.path.join(pdf_directory, filename)
         markdown_filename = os.path.splitext(filename)[0] + ".md"
