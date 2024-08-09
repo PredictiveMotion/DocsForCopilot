@@ -101,7 +101,7 @@ def process_line(line, font_size, header_levels):
 def process_code_block(header, code):
     return f"### {header}\n```\n{code}\n```\n\n"
 
-def pdf_to_markdown_pdfminer(input_pdf_path):
+def pdf_to_markdown_pdfplumber(input_pdf_path):
     pages_content = extract_text_with_font_info(input_pdf_path)
     header_levels = determine_header_levels(pages_content)
     markdown_output = convert_to_markdown(pages_content, header_levels)
