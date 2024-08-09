@@ -22,6 +22,8 @@ def pdf_to_markdown(input_pdf_path, output_markdown_path, converter="pdfplumber"
             print(f"Invalid converter: {converter}")
             return
 
+        print(f"Using converter: {converter}")  # Add this line for debugging
+
         with open(output_markdown_path, "w", encoding="utf-8") as f:
             f.write(markdown_text)
 
@@ -72,6 +74,8 @@ def main():
     # Set the default converter to "pdfplumber" if not specified
     if not converter_to_use:
         converter_to_use = "pdfplumber"
+
+    print(f"Using converter: {converter_to_use}")  # Add this line for debugging
 
     for index, filename in enumerate(pdf_files, start=1):
         pdf_path = os.path.join(pdf_directory, filename)
