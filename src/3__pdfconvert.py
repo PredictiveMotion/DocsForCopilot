@@ -22,7 +22,15 @@ def pdf_to_markdown(input_pdf_path, output_markdown_path, converter="pdfplumber"
             print(f"Invalid converter: {converter}")
             return
 
-        print(f"Using converter: {converter}")  # Add this line for debugging
+        print(f"Using converter: {converter}")
+
+        # Check if the generated markdown is empty
+        if not markdown_text.strip():
+            print(f"Warning: Empty markdown generated with {converter}. Trying alternative converter.")
+            if converter == "pdfplumber":
+                markdown_text = pdf_to_markdown_markdownify(input_pdf_path)
+            else:
+                markdown_text = pdf_to_markdown_pdfplumber(input_pdf_path)
 
         with open(output_markdown_path, "w", encoding="utf-8") as f:
             f.write(markdown_text)
