@@ -15,9 +15,9 @@ def parse_arguments():
     parser.add_argument(
         "converter",
         nargs="?",
-        choices=["pdfminer", "markdownify"],
-        default="pdfminer",
-        help="Converter to use (default: pdfminer)",
+        choices=["pdfplumber", "markdownify"],
+        default="pdfplumber",
+        help="Converter to use (default: pdfplumber)",
     )
     parser.add_argument('--parallel', action='store_true', help='Enable parallel processing for downloading PDFs.')    
     parser.add_argument("--download_dir", help="Directory to save downloaded PDFs")
@@ -36,10 +36,14 @@ def process_arguments(args):
         markdown_directory = args.md_dir
         converter_to_use = args.converter
 
-    if not all([pdf_directory, markdown_directory, converter_to_use]):
+    if not all([pdf_directory, markdown_directory]):
         print("Error: Missing required arguments. Use --help for usage information.")
         sys.exit(1)
 
     os.makedirs(markdown_directory, exist_ok=True)
+
+    # Set default converter to pdfplumber if not specified
+    if not converter_to_use:
+        converter_to_use = "pdfplumber"
 
     return pdf_directory, markdown_directory, converter_to_use
