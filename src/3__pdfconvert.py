@@ -1,15 +1,9 @@
 import os
-import sys
-# from pdfminer.pdfparser import PDFSyntaxError
 import pdfplumber
 from pdfminer.pdfparser import PDFSyntaxError
 
-# Ensure the parent directory of 'src' is in the sys.path
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.insert(0, project_root)
-
-from converters.pdf_to_markdown_pdfplumber import pdf_to_markdown_pdfplumber
-from converters.pdf_to_markdown_markdownify import pdf_to_markdown_markdownify
+from src.converters.pdf_to_markdown_pdfplumber import pdf_to_markdown_pdfplumber
+from src.converters.pdf_to_markdown_markdownify import pdf_to_markdown_markdownify
 from src.utils.argument_parser import parse_arguments, process_arguments
 
 def pdf_to_markdown(input_pdf_path, output_markdown_path, converter="pdfplumber"):
